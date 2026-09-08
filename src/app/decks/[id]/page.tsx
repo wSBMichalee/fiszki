@@ -1,0 +1,47 @@
+import { createClient } from '@/utils/supabase/server'
+import { notFound } from 'next/navigation'
+import StudyMode from '@/components/StudyMode'
+
+export default async function DeckPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = await createClient()
+  
+  const { data: deck, error: deckError } = await supabase
+    .from('decks')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (deckError || !deck) {
+    notFound()
+  }
+
+  const { data: cards, error: cardsError } = await supabase
+    .from('cards')
+    .select('*')
+    .eq('deck_id', id)
+    .order('created_at', { ascending: true })
+
+  if (cardsError || !cards) {
+    notFound()
+  }
+
+  return (
+    <main className="flex-1 max-w-2xl w-full mx-auto p-4 md:p-8 flex flex-col h-[calc(100vh-64px)]">
+      <div className="mb-6 flex justify-between items-center">
+        <h1 className="text-2xl font-serif text-[--color-navy]">{deck.title}</h1>
+        <span className="text-sm font-medium text-[--color-graphite] bg-white border border-gray-200 px-3 py-1 rounded-full shadow-sm">
+          {cards.length} fiszek
+        </span>
+      </div>
+      
+      {cards.length > 0 ? (
+        <StudyMode deckId={id} initialCards={cards} />
+      ) : (
+        <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300 shadow-sm">
+          <p className="text-[--color-graphite]">Ten zestaw nie ma jeszcze żadnych fiszek.</p>
+        </div>
+      )}
+    </main>
+  )
+}
