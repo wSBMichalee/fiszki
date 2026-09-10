@@ -1,10 +1,18 @@
 import { GoogleGenAI } from '@google/genai'
 import { NextResponse } from 'next/server'
+import { createClient } from '@/utils/supabase/server'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
 export async function POST(req: Request) {
   try {
+    const supabase = await createClient()
+    const { data: userData, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !userData?.user) {
+      return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
+    }
+
     const { imageBase64 } = await req.json()
 
     if (!imageBase64) {
@@ -73,7 +81,7 @@ export async function POST(req: Request) {
     let parsed
     try {
       parsed = JSON.parse(text)
-    } catch (e) {
+    } catch {
       console.error('Failed to parse Gemini response:', text)
       return NextResponse.json({ error: 'Nie udało się odczytać fiszek' }, { status: 500 })
     }
