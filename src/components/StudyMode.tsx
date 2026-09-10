@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, X, Shuffle, ArrowRightLeft } from 'lucide-react'
+import Link from 'next/link'
+import { Check, X, Shuffle, ArrowRightLeft, Trophy, Sparkles, RotateCcw, ArrowLeft } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -31,7 +32,7 @@ export default function StudyMode({ deckId, initialCards }: { deckId: string, in
   const currentCard = cards[currentIndex]
 
   const handleNext = async (learned: boolean) => {
-    // Determine fly direction for exam mode
+    // Determine fly direction
     setDirection(learned ? 'right' : 'left')
 
     // Save to DB
@@ -47,19 +48,15 @@ export default function StudyMode({ deckId, initialCards }: { deckId: string, in
         .then()
     }
 
-    // Wait for exit animation in exam mode
-    if (studyType === 'exam') {
-      setTimeout(() => {
-        proceedToNext()
-      }, 300)
-    } else {
+    // Wait for energetic spring exit animation
+    setTimeout(() => {
       proceedToNext()
-    }
+    }, 280)
   }
 
   const proceedToNext = () => {
     if (currentIndex < cards.length - 1) {
-      setCurrentIndex(currentIndex + 1)
+      setCurrentIndex(prev => prev + 1)
       setIsFlipped(false)
       setDirection(null)
     } else {
@@ -84,39 +81,92 @@ export default function StudyMode({ deckId, initialCards }: { deckId: string, in
   }
 
   const learnedCount = cards.filter(c => c.learned).length
+  const totalCount = cards.length
+  const progressPercent = Math.min(100, Math.round(((currentIndex) / totalCount) * 100))
+  const successRate = Math.round((learnedCount / totalCount) * 100)
 
   if (isFinished) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 py-8">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={{ opacity: 0, scale: 0.85, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ type: "spring", bounce: 0, duration: 0.5 }}
-          className="w-full max-w-md bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 p-10 text-center"
+          transition={{ type: "spring", stiffness: 280, damping: 20 }}
+          className="w-full max-w-md bg-white rounded-[36px] shadow-[0_20px_50px_rgba(28,43,69,0.08)] border border-gray-100 p-8 sm:p-10 text-center relative overflow-hidden"
         >
-          <h2 className="text-4xl font-serif font-bold text-[var(--color-navy)] mb-6 tracking-tight">Koniec!</h2>
+          {/* Subtle background glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-[var(--color-gold)]/15 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Trophy Badge */}
+          <motion.div 
+            initial={{ scale: 0, rotate: -20 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 350, damping: 18, delay: 0.15 }}
+            className="mx-auto w-24 h-24 rounded-3xl bg-gradient-to-tr from-[var(--color-gold)] to-[#fce49e] flex items-center justify-center mb-6 shadow-[0_12px_28px_rgba(217,164,65,0.35)] relative"
+          >
+            <Trophy className="w-12 h-12 text-[var(--color-navy)]" />
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              className="absolute -top-2 -right-2 bg-white rounded-full p-1.5 shadow-md"
+            >
+              <Sparkles className="w-4 h-4 text-[var(--color-gold)]" />
+            </motion.div>
+          </motion.div>
           
-          <div className="mx-auto w-32 h-32 rounded-full bg-green-50 flex items-center justify-center mb-8 border border-green-100/50">
-            <span className="text-4xl font-bold text-[var(--color-success)]">{learnedCount}<span className="text-xl text-green-700/50">/{cards.length}</span></span>
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[var(--color-navy)] mb-2 tracking-tight">
+            {successRate === 100 ? "Bezbłędnie!" : successRate >= 70 ? "Świetna robota!" : "Dobra sesja!"}
+          </h2>
+          
+          <p className="text-[var(--color-graphite)] text-base mb-8 leading-relaxed">
+            {successRate === 100 
+              ? "Opanowałeś wszystkie fiszki z tej talii!" 
+              : `Znasz już ${learnedCount} z ${totalCount} fiszek. Każda powtórka przybliża Cię do mistrzostwa.`}
+          </p>
+
+          {/* Stats Badges */}
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            <div className="bg-emerald-50/80 border border-emerald-200/60 rounded-2xl p-4 flex flex-col items-center">
+              <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider mb-1">Umiem to</span>
+              <span className="text-2xl font-bold text-[var(--color-success)]">{learnedCount}</span>
+            </div>
+            <div className="bg-amber-50/80 border border-amber-200/60 rounded-2xl p-4 flex flex-col items-center">
+              <span className="text-xs font-semibold text-amber-800 uppercase tracking-wider mb-1">Skuteczność</span>
+              <span className="text-2xl font-bold text-[var(--color-gold)]">{successRate}%</span>
+            </div>
           </div>
           
-          <p className="text-[var(--color-graphite)] text-lg mb-10 leading-relaxed">
-            Udało Ci się zapamiętać <strong className="text-[var(--color-navy)]">{learnedCount}</strong> {learnedCount === 1 ? 'fiszkę' : learnedCount >= 2 && learnedCount <= 4 ? 'fiszki' : 'fiszek'}.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button 
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3">
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
               onClick={handleRestart}
-              className="flex-1 px-6 py-4 border border-gray-200 bg-white text-[var(--color-navy)] rounded-2xl font-semibold transition-transform duration-[160ms] ease-[var(--ease-out)] cursor-pointer active:scale-[0.97]"
+              className="w-full py-4 px-6 bg-[var(--color-navy)] text-white rounded-2xl font-bold text-base flex items-center justify-center gap-2 shadow-[0_6px_0_#0f1726] active:shadow-none active:translate-y-1 transition-all cursor-pointer"
             >
-              Powtórz
-            </button>
-            <button 
+              <RotateCcw size={18} />
+              Powtórz ten zestaw
+            </motion.button>
+
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
               onClick={handleShuffle}
-              className="flex-1 px-6 py-4 bg-[var(--color-navy)] text-white rounded-2xl font-semibold transition-transform duration-[160ms] ease-[var(--ease-out)] flex items-center justify-center gap-2 cursor-pointer active:scale-[0.97]"
+              className="w-full py-3.5 px-6 bg-white border-2 border-gray-200 text-[var(--color-navy)] rounded-2xl font-semibold text-base flex items-center justify-center gap-2 hover:bg-gray-50 shadow-[0_4px_0_#e5e7eb] active:shadow-none active:translate-y-1 transition-all cursor-pointer"
             >
-              <Shuffle size={18} /> Tasuj
-            </button>
+              <Shuffle size={18} />
+              Przetasuj i powtórz
+            </motion.button>
+
+            <Link 
+              href="/dashboard"
+              className="inline-flex items-center justify-center gap-2 py-3 text-[var(--color-graphite)] font-medium text-sm hover:text-[var(--color-navy)] transition-colors mt-1"
+            >
+              <ArrowLeft size={16} />
+              Wróć do listy zestawów
+            </Link>
           </div>
         </motion.div>
       </div>
@@ -124,23 +174,38 @@ export default function StudyMode({ deckId, initialCards }: { deckId: string, in
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center max-w-md mx-auto w-full pt-4 pb-8">
-      {/* Header controls */}
-      <div className="w-full flex justify-between items-center mb-8 px-4 text-sm font-semibold text-[var(--color-graphite)]">
-        <span className="bg-white/50 px-3 py-1.5 rounded-full border border-gray-200/50 shadow-sm">
-          {currentIndex + 1} / {cards.length}
-        </span>
-        <div className="flex items-center gap-2">
+    <div className="flex-1 flex flex-col items-center max-w-md mx-auto w-full pt-2 pb-6">
+      {/* Progress Bar & Header Controls */}
+      <div className="w-full px-4 mb-6">
+        <div className="flex justify-between items-center mb-2.5 text-xs font-bold text-[var(--color-graphite)]">
+          <div className="flex items-center gap-1.5">
+            <span className="bg-white/80 px-2.5 py-1 rounded-full border border-gray-200 shadow-xs font-semibold text-[var(--color-navy)]">
+              Karta {currentIndex + 1} z {totalCount}
+            </span>
+          </div>
+
           <button 
             onClick={() => {
               setStudyType(prev => prev === 'standard' ? 'exam' : 'standard')
               handleRestart()
             }}
-            className="flex items-center gap-1.5 bg-white/50 px-3 py-1.5 rounded-full border border-gray-200/50 hover:bg-white hover:text-[var(--color-navy)] transition-colors cursor-pointer shadow-sm active:scale-95"
+            className="flex items-center gap-1.5 bg-white/80 hover:bg-white text-[var(--color-navy)] px-3 py-1 rounded-full border border-gray-200 shadow-xs text-xs font-semibold transition-all cursor-pointer active:scale-95"
           >
-            <ArrowRightLeft size={16} /> 
-            {studyType === 'standard' ? 'Przeglądanie' : 'Egzamin'}
+            <ArrowRightLeft size={13} /> 
+            {studyType === 'standard' ? 'Tryb standard' : 'Tryb 3D'}
           </button>
+        </div>
+
+        {/* Dynamic Spring Progress Bar */}
+        <div className="w-full h-3 bg-gray-200/90 rounded-full p-0.5 overflow-hidden shadow-inner relative">
+          <motion.div 
+            className="h-full rounded-full bg-gradient-to-r from-[var(--color-gold)] via-[#e6b34e] to-[#f4c868] shadow-xs relative"
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.max(8, progressPercent)}%` }}
+            transition={{ type: "spring", stiffness: 200, damping: 22 }}
+          >
+            <div className="absolute inset-0 bg-white/20 rounded-full h-1/2" />
+          </motion.div>
         </div>
       </div>
       
@@ -150,82 +215,122 @@ export default function StudyMode({ deckId, initialCards }: { deckId: string, in
           <motion.div
             key={currentCard.id}
             custom={direction}
-            initial={
-              studyType === 'exam' 
-                ? { scale: 0.9, y: 40, opacity: 0 } 
-                : { opacity: 0, x: direction === 'right' ? 100 : -100 }
-            }
-            animate={{ scale: 1, y: 0, x: 0, opacity: 1, rotateY: isFlipped ? 180 : 0 }}
-            exit={
-              studyType === 'exam' 
-                ? { 
-                    x: direction === 'right' ? 300 : -300, 
-                    y: 100, 
-                    rotateZ: direction === 'right' ? 15 : -15, 
-                    opacity: 0,
-                    transition: { duration: 0.3 }
-                  } 
-                : { opacity: 0, scale: 0.95 }
-            }
-            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+            initial={{ 
+              scale: 0.92, 
+              y: 25, 
+              opacity: 0,
+              rotateZ: direction === 'right' ? -3 : direction === 'left' ? 3 : 0
+            }}
+            animate={{ 
+              scale: 1, 
+              y: 0, 
+              x: 0, 
+              rotateZ: 0,
+              opacity: 1, 
+              rotateY: isFlipped ? 180 : 0 
+            }}
+            exit={{ 
+              x: direction === 'right' ? 420 : direction === 'left' ? -420 : 0, 
+              y: direction === 'right' ? -40 : direction === 'left' ? 40 : 0, 
+              rotateZ: direction === 'right' ? 22 : direction === 'left' ? -22 : 0, 
+              scale: 0.85,
+              opacity: 0,
+              transition: { 
+                type: "spring", 
+                stiffness: 400, 
+                damping: 28 
+              }
+            }}
+            transition={{ type: "spring", stiffness: 320, damping: 26 }}
             style={{ transformStyle: "preserve-3d" }}
             className="w-full h-full absolute inset-0 cursor-pointer px-4"
             onClick={() => setIsFlipped(!isFlipped)}
           >
             {/* Front */}
-            <div className="absolute inset-0 mx-4 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-200/80 flex flex-col items-center justify-center p-10 text-center">
-              <h3 className="font-serif font-bold text-3xl text-[var(--color-navy)] leading-snug tracking-tight">
+            <div className="absolute inset-0 mx-4 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border border-gray-200/90 flex flex-col items-center justify-center p-8 sm:p-10 text-center select-none">
+              <span className="absolute top-6 text-xs font-bold uppercase tracking-widest text-[var(--color-navy)]/35">
+                Pytanie
+              </span>
+              
+              <h3 className="font-serif font-bold text-2xl sm:text-3xl text-[var(--color-navy)] leading-snug tracking-tight my-auto">
                 {currentCard.question}
               </h3>
-              <div className="absolute bottom-8 text-[var(--color-graphite)] text-sm font-semibold opacity-40">
-                Dotknij by odwrócić
+              
+              <div className="text-[var(--color-graphite)] text-xs sm:text-sm font-semibold opacity-60 flex items-center gap-1.5 bg-white/60 px-3.5 py-1.5 rounded-full border border-gray-200/60 shadow-xs">
+                <span>Kliknij, aby odwrócić</span>
               </div>
             </div>
             
             {/* Back */}
             <div 
-              className="absolute inset-0 mx-4 backface-hidden bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-2 border-[var(--color-gold)] flex flex-col items-center justify-center p-10 text-center"
+              className="absolute inset-0 mx-4 backface-hidden bg-white rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border-2 border-[var(--color-gold)] flex flex-col items-center justify-center p-8 sm:p-10 text-center select-none"
               style={{ transform: "rotateY(180deg)" }}
             >
-              <p className="font-serif font-semibold text-2xl text-[var(--color-navy)] leading-snug tracking-tight">
+              <span className="absolute top-6 text-xs font-bold uppercase tracking-widest text-[var(--color-gold)]">
+                Odpowiedź
+              </span>
+              
+              <p className="font-serif font-semibold text-xl sm:text-2xl text-[var(--color-navy)] leading-snug tracking-tight my-auto">
                 {currentCard.answer}
               </p>
+
+              <div className="text-[var(--color-graphite)] text-xs sm:text-sm font-semibold opacity-60 flex items-center gap-1.5 bg-gray-50 px-3.5 py-1.5 rounded-full border border-gray-200/60 shadow-xs">
+                <span>Oceń swoją znajomość poniżej</span>
+              </div>
             </div>
           </motion.div>
         </AnimatePresence>
 
-        {/* Stack effect for exam mode */}
+        {/* Stack effect for 3D examination mode */}
         {studyType === 'exam' && currentIndex < cards.length - 1 && (
-          <div className="absolute inset-0 mx-4 -z-10 bg-white rounded-[32px] border border-gray-200/50 shadow-sm transform translate-y-4 scale-[0.95] opacity-60 pointer-events-none"></div>
+          <div className="absolute inset-0 mx-4 -z-10 bg-white rounded-[32px] border border-gray-200/60 shadow-xs transform translate-y-3.5 scale-[0.96] opacity-70 pointer-events-none" />
         )}
         {studyType === 'exam' && currentIndex < cards.length - 2 && (
-          <div className="absolute inset-0 mx-4 -z-20 bg-white rounded-[32px] border border-gray-200/50 shadow-sm transform translate-y-8 scale-[0.90] opacity-30 pointer-events-none"></div>
+          <div className="absolute inset-0 mx-4 -z-20 bg-white rounded-[32px] border border-gray-200/60 shadow-xs transform translate-y-7 scale-[0.92] opacity-40 pointer-events-none" />
         )}
       </div>
       
-      {/* Controls */}
-      <div className="w-full mt-10 px-4">
+      {/* Controls: Tactile 3D Duolingo-style action buttons */}
+      <div className="w-full mt-8 px-4">
         <motion.div 
-          animate={{ opacity: isFlipped ? 1 : 0, y: isFlipped ? 0 : 20 }}
-          transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-          className={`grid grid-cols-2 gap-4 ${isFlipped ? 'pointer-events-auto' : 'pointer-events-none'}`}
+          animate={{ 
+            opacity: isFlipped ? 1 : 0.45, 
+            y: isFlipped ? 0 : 8,
+            scale: isFlipped ? 1 : 0.98
+          }}
+          transition={{ type: "spring", stiffness: 350, damping: 25 }}
+          className="grid grid-cols-2 gap-4"
         >
-          <button 
+          {/* Button: Repeat */}
+          <motion.button 
+            disabled={!isFlipped}
+            whileHover={isFlipped ? { scale: 1.02 } : {}}
+            whileTap={isFlipped ? { scale: 0.96 } : {}}
             onClick={(e) => { e.stopPropagation(); handleNext(false); }}
-            className="flex flex-col items-center justify-center gap-3 py-5 bg-white border border-[var(--color-brick)]/20 rounded-2xl text-[var(--color-brick)] hover:bg-red-50/50 transition-colors cursor-pointer shadow-[0_4px_20px_rgb(0,0,0,0.03)] active:scale-[0.97]"
+            className={`flex flex-col items-center justify-center gap-1.5 py-4 px-3 bg-white border-2 border-[var(--color-brick)]/30 rounded-2xl text-[var(--color-brick)] transition-colors shadow-[0_5px_0_rgba(184,74,57,0.25)] active:shadow-none active:translate-y-1 ${
+              isFlipped ? 'cursor-pointer hover:bg-red-50/60' : 'cursor-not-allowed opacity-50'
+            }`}
           >
-            <X size={28} />
-            <span className="font-semibold text-sm">Muszę powtórzyć</span>
-          </button>
-          <button 
+            <X size={26} strokeWidth={2.8} />
+            <span className="font-bold text-sm tracking-tight">Muszę powtórzyć</span>
+          </motion.button>
+
+          {/* Button: Learned */}
+          <motion.button 
+            disabled={!isFlipped}
+            whileHover={isFlipped ? { scale: 1.02 } : {}}
+            whileTap={isFlipped ? { scale: 0.96 } : {}}
             onClick={(e) => { e.stopPropagation(); handleNext(true); }}
-            className="flex flex-col items-center justify-center gap-3 py-5 bg-white border border-[var(--color-success)]/20 rounded-2xl text-[var(--color-success)] hover:bg-green-50/50 transition-colors cursor-pointer shadow-[0_4px_20px_rgb(0,0,0,0.03)] active:scale-[0.97]"
+            className={`flex flex-col items-center justify-center gap-1.5 py-4 px-3 bg-[var(--color-success)] text-white border-2 border-emerald-700/80 rounded-2xl transition-colors shadow-[0_5px_0_#1b5934] active:shadow-none active:translate-y-1 ${
+              isFlipped ? 'cursor-pointer hover:bg-[#236b41]' : 'cursor-not-allowed opacity-50'
+            }`}
           >
-            <Check size={28} />
-            <span className="font-semibold text-sm">Umiem to</span>
-          </button>
+            <Check size={26} strokeWidth={2.8} />
+            <span className="font-bold text-sm tracking-tight">Umiem to!</span>
+          </motion.button>
         </motion.div>
       </div>
     </div>
   )
 }
+

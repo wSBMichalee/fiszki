@@ -15,7 +15,12 @@ export async function saveDeck(title: string, cards: {question: string, answer: 
     .select()
     .single()
 
-  if (deckError) throw new Error(deckError.message)
+  if (deckError) {
+    if (deckError.message?.includes('schema cache') || deckError.code === 'PGRST205') {
+      throw new Error('Baza danych wymaga utworzenia tabel (skopiuj zawartość pliku supabase/schema.sql do SQL Editor w panelu Supabase).')
+    }
+    throw new Error(deckError.message)
+  }
 
   const cardsToInsert = cards.map(c => ({
     deck_id: deck.id,

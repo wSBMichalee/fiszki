@@ -97,8 +97,8 @@ export default function Scanner() {
       
       setCards((prev) => [...prev, ...data.cards])
       setStep('edit')
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Wystąpił błąd')
       setStep('preview')
     }
   }
@@ -109,8 +109,8 @@ export default function Scanner() {
     try {
       const deckId = await saveDeck(title, cards)
       router.push(`/decks/${deckId}`)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Wystąpił błąd')
       setIsSaving(false)
     }
   }

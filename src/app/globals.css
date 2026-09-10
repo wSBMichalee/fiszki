@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-ivory: #F7F4EC;
+  --color-ivory: #FAFAFA;
+  --color-surface-alt: #F0F0F0;
   --color-navy: #1C2B45;
   --color-graphite: #5B5F6B;
   --color-gold: #D9A441;
@@ -9,8 +10,8 @@
   --color-brick: #B5544F;
   --color-background: var(--color-ivory);
   --color-foreground: var(--color-navy);
-  --font-serif: var(--font-fraunces), serif;
-  --font-sans: var(--font-inter), sans-serif;
+  --font-serif: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
@@ -18,6 +19,8 @@
 
 @layer base {
   :root {
+    --color-ivory: #FAFAFA;
+    --color-surface-alt: #F0F0F0;
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
     --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
@@ -27,7 +30,7 @@
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
-  font-family: var(--font-sans);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
 }
 
 @utility perspective-1000 {
