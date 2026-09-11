@@ -14,22 +14,22 @@ export default function Footer({ className = "bg-[var(--color-surface-alt)]" }: 
           </Link>
 
           {/* Linki po prawej */}
-          <nav className="flex items-center gap-6 text-xs sm:text-sm font-medium text-[var(--color-graphite)]">
+          <nav className="flex flex-wrap items-center justify-center sm:justify-start gap-x-6 gap-y-2 text-xs sm:text-sm font-medium text-[var(--color-graphite)]">
             <Link 
               href="/kontakt" 
-              className="hover:text-[var(--color-navy)] transition-colors"
+              className="py-2 hover:text-[var(--color-navy)] transition-colors inline-block"
             >
               Kontakt
             </Link>
             <Link 
               href="/regulamin" 
-              className="hover:text-[var(--color-navy)] transition-colors"
+              className="py-2 hover:text-[var(--color-navy)] transition-colors inline-block"
             >
               Regulamin
             </Link>
             <Link 
               href="/polityka-prywatnosci" 
-              className="hover:text-[var(--color-navy)] transition-colors"
+              className="py-2 hover:text-[var(--color-navy)] transition-colors inline-block"
             >
               Polityka prywatności
             </Link>

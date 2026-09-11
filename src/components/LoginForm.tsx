@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
-import { login } from "@/app/login/actions";
+import { createClient } from "@/utils/supabase/client";
 import Button from "@/components/Button";
 
 interface LoginFormProps {
@@ -17,14 +18,49 @@ export default function LoginForm({
 }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   const displayError = validationError || initialError;
 
-  const handleSubmit = () => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setValidationError(null);
     setIsSubmitting(true);
+
+    try {
+      const supabase = createClient({
+        rememberMe,
+        storage: !rememberMe && typeof window !== "undefined" ? window.sessionStorage : undefined,
+      });
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setValidationError(
+          error.message === "Invalid login credentials"
+            ? "Nie udało się zalogować. Sprawdź dane."
+            : error.message || "Nie udało się zalogować. Sprawdź dane."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Wystąpił nieoczekiwany błąd podczas logowania.";
+      setValidationError(message);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -78,6 +114,24 @@ export default function LoginForm({
           />
         </div>
 
+        {/* Remember Me Checkbox */}
+        <div className="flex items-center gap-2 pt-0.5 select-none">
+          <input
+            id="remember-me"
+            name="rememberMe"
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="w-4 h-4 rounded border-black/20 text-[var(--color-navy)] focus:ring-[var(--color-navy)]/20 cursor-pointer accent-[var(--color-navy)]"
+          />
+          <label
+            htmlFor="remember-me"
+            className="text-xs font-medium text-[var(--color-navy)] cursor-pointer"
+          >
+            Zapamiętaj mnie
+          </label>
+        </div>
+
         {/* Error Message Display */}
         {displayError && (
           <motion.div
@@ -93,7 +147,6 @@ export default function LoginForm({
         {/* Submit Button */}
         <div className="pt-2">
           <Button
-            formAction={login}
             type="submit"
             variant="primary"
             size="md"

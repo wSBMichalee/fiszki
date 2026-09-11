@@ -27,10 +27,10 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <main className="flex-1 max-w-2xl w-full mx-auto p-4 md:p-8 flex flex-col h-[calc(100vh-64px)]">
-      <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-2xl font-serif text-[--color-navy]">{deck.title}</h1>
-        <span className="text-sm font-medium text-[--color-graphite] bg-white border border-gray-200 px-3 py-1 rounded-full shadow-sm">
+    <main className="flex-1 max-w-2xl w-full mx-auto p-4 md:p-8 flex flex-col min-h-[calc(100dvh-64px)]">
+      <div className="mb-4 sm:mb-6 flex justify-between items-center gap-3">
+        <h1 className="text-xl sm:text-2xl font-serif text-[--color-navy] line-clamp-1 min-w-0">{deck.title}</h1>
+        <span className="shrink-0 text-xs sm:text-sm font-medium text-[--color-graphite] bg-white border border-gray-200 px-3 py-1 rounded-full shadow-sm">
           {cards.length} fiszek
         </span>
       </div>

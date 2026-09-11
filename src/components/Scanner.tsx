@@ -1,19 +1,21 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Camera, RefreshCcw, Save, Trash2, Plus } from 'lucide-react'
+import { Camera, RefreshCcw, Save, Trash2, Plus, BookOpen, ArrowRight, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { saveDeck } from '@/app/decks/new/actions'
 import { motion, AnimatePresence } from 'framer-motion'
+import Button from '@/components/Button'
 
 type Card = { question: string, answer: string }
-type Step = 'camera' | 'preview' | 'loading' | 'edit'
+type Step = 'subject' | 'camera' | 'preview' | 'loading' | 'edit'
 
 export default function Scanner() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   
-  const [step, setStep] = useState<Step>('camera')
+  const [step, setStep] = useState<Step>('subject')
+  const [subject, setSubject] = useState('')
   const [photo, setPhoto] = useState<string | null>(null)
   const [cards, setCards] = useState<Card[]>([])
   const [error, setError] = useState('')
@@ -89,13 +91,16 @@ export default function Scanner() {
       const res = await fetch('/api/parse-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: photo })
+        body: JSON.stringify({ imageBase64: photo, subject: subject.trim() })
       })
       
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Wystąpił błąd')
       
       setCards((prev) => [...prev, ...data.cards])
+      if (subject.trim() && title === 'Nowy zestaw fiszek') {
+        setTitle(`Zestaw: ${subject.trim()}`)
+      }
       setStep('edit')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Wystąpił błąd')
@@ -107,7 +112,7 @@ export default function Scanner() {
     if (cards.length === 0) return
     setIsSaving(true)
     try {
-      const deckId = await saveDeck(title, cards)
+      const deckId = await saveDeck(title, cards, subject.trim())
       router.push(`/decks/${deckId}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Wystąpił błąd')
@@ -132,6 +137,70 @@ export default function Scanner() {
   return (
     <div className="flex-1 flex flex-col bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 overflow-hidden relative">
       <AnimatePresence mode="wait">
+        {step === 'subject' && (
+          <motion.div
+            key="subject"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 text-center"
+          >
+            <div className="w-full max-w-md flex flex-col items-center">
+              <div className="w-14 h-14 rounded-2xl bg-[var(--color-navy)] text-white flex items-center justify-center mb-5 shadow-xs">
+                <BookOpen className="w-7 h-7 text-[var(--color-gold)]" />
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[var(--color-navy)] tracking-tight mb-2">
+                Jaki to przedmiot?
+              </h2>
+              <p className="text-[var(--color-graphite)] text-sm mb-8 leading-relaxed max-w-sm">
+                Podaj przedmiot lub zagadnienie, aby sztuczna inteligencja precyzyjnie dobrała terminologię i pojęcia na fiszkach.
+              </p>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (subject.trim()) {
+                    setStep('camera')
+                  }
+                }}
+                className="w-full flex flex-col gap-4 text-left"
+              >
+                <div className="flex flex-col gap-1.5">
+                  <label 
+                    htmlFor="subject-input" 
+                    className="text-xs font-semibold text-[var(--color-navy)] uppercase tracking-wider"
+                  >
+                    Przedmiot <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="subject-input"
+                    type="text"
+                    required
+                    autoFocus
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="np. Biologia, Prawo rzymskie, Historia"
+                    className="w-full px-4 py-3 rounded-xl border border-black/10 focus:outline-none focus:ring-2 focus:ring-[var(--color-navy)]/15 focus:border-[var(--color-navy)] transition-all text-sm bg-white text-[var(--color-navy)] placeholder:text-[var(--color-graphite)]/40 font-medium"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  className="w-full gap-2 mt-2 group"
+                  disabled={!subject.trim()}
+                >
+                  <span>Przejdź do skanera</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </form>
+            </div>
+          </motion.div>
+        )}
+
         {step === 'camera' && (
           <motion.div 
             key="camera"
@@ -141,6 +210,17 @@ export default function Scanner() {
             transition={{ duration: 0.3 }}
             className="flex-1 flex flex-col bg-black relative"
           >
+            {subject && (
+              <button
+                type="button"
+                onClick={() => setStep('subject')}
+                className="absolute top-4 left-4 z-20 px-3.5 py-2.5 min-h-[44px] rounded-full bg-black/50 backdrop-blur-md text-white/90 text-xs font-semibold flex items-center gap-1.5 hover:bg-black/70 cursor-pointer transition-colors border border-white/10"
+              >
+                <ArrowLeft size={16} />
+                <span className="truncate max-w-[150px]">{subject}</span>
+              </button>
+            )}
+
             <video 
               ref={videoRef} 
               autoPlay 
@@ -157,16 +237,17 @@ export default function Scanner() {
               </div>
             </div>
             
-            <div className="absolute bottom-0 inset-x-0 p-8 flex flex-col items-center gap-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+            <div className="absolute bottom-0 inset-x-0 p-6 sm:p-8 flex flex-col items-center gap-5 sm:gap-6 bg-gradient-to-t from-black/85 via-black/45 to-transparent">
               <button 
                 onClick={takePhoto}
+                aria-label="Zrób zdjęcie"
                 className="w-20 h-20 bg-white/20 rounded-full border-4 border-white flex items-center justify-center cursor-pointer hover:bg-white/40 transition-colors duration-200 active:scale-95"
               >
                 <div className="w-16 h-16 bg-white rounded-full"></div>
               </button>
               
               <div className="relative">
-                <label className="px-6 py-2.5 bg-white/10 backdrop-blur-md rounded-full text-white text-sm font-medium border border-white/10 cursor-pointer hover:bg-white/20 transition-colors active:scale-95 flex items-center justify-center">
+                <label className="px-6 py-2.5 min-h-[44px] bg-white/10 backdrop-blur-md rounded-full text-white text-sm font-medium border border-white/10 cursor-pointer hover:bg-white/20 transition-colors active:scale-95 flex items-center justify-center">
                   Wgraj ze zdjęć
                   <input 
                     type="file" 
@@ -196,13 +277,13 @@ export default function Scanner() {
             <div className="absolute bottom-0 inset-x-0 p-6 flex justify-between bg-gradient-to-t from-black/80 to-transparent gap-4">
               <button 
                 onClick={() => setStep('camera')}
-                className="flex-1 py-3.5 bg-white/20 text-white rounded-xl font-medium backdrop-blur-md cursor-pointer transition-transform duration-[160ms] active:scale-[0.97] border border-white/10"
+                className="flex-1 py-3.5 min-h-[44px] bg-white/20 text-white rounded-xl font-medium backdrop-blur-md cursor-pointer transition-transform duration-[160ms] active:scale-[0.97] border border-white/10 flex items-center justify-center"
               >
                 Powtórz
               </button>
               <button 
                 onClick={parseImage}
-                className="flex-1 py-3.5 bg-[var(--color-gold)] text-white rounded-xl font-medium cursor-pointer transition-transform duration-[160ms] active:scale-[0.97]"
+                className="flex-1 py-3.5 min-h-[44px] bg-[var(--color-gold)] text-white rounded-xl font-medium cursor-pointer transition-transform duration-[160ms] active:scale-[0.97] flex items-center justify-center"
               >
                 Użyj tego
               </button>
@@ -245,16 +326,23 @@ export default function Scanner() {
             className="flex-1 flex flex-col overflow-hidden bg-white"
           >
             <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white sticky top-0 z-10">
-              <input 
-                type="text" 
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="flex-1 text-2xl font-serif font-bold text-[var(--color-navy)] bg-transparent focus:outline-none border-b border-transparent focus:border-[var(--color-gold)] px-1 py-1 transition-colors w-full"
-              />
+              <div className="flex-1 flex items-center gap-2.5 w-full min-w-0">
+                <input 
+                  type="text" 
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="flex-1 text-2xl font-serif font-bold text-[var(--color-navy)] bg-transparent focus:outline-none border-b border-transparent focus:border-[var(--color-gold)] px-1 py-1 transition-colors min-w-0"
+                />
+                {subject && (
+                  <span className="shrink-0 text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200/60 text-amber-900/80">
+                    {subject}
+                  </span>
+                )}
+              </div>
               <button 
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center justify-center gap-2 bg-[var(--color-navy)] text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] disabled:opacity-50 cursor-pointer shrink-0 w-full sm:w-auto"
+                className="flex items-center justify-center gap-2 bg-[var(--color-navy)] text-white px-6 py-2.5 min-h-[44px] rounded-xl font-medium text-sm transition-all duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] disabled:opacity-50 cursor-pointer shrink-0 w-full sm:w-auto"
               >
                 {isSaving ? 'Zapisywanie...' : <><Save size={18} /> Zapisz</>}
               </button>
@@ -281,7 +369,8 @@ export default function Scanner() {
                     >
                       <button 
                         onClick={() => removeCard(index)}
-                        className="absolute top-4 right-4 text-gray-400 hover:text-[var(--color-brick)] transition-colors cursor-pointer active:scale-90"
+                        aria-label="Usuń fiszkę"
+                        className="absolute top-3 right-3 text-gray-400 hover:text-[var(--color-brick)] transition-colors cursor-pointer active:scale-90 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center"
                       >
                         <Trash2 size={20} />
                       </button>
@@ -311,10 +400,10 @@ export default function Scanner() {
                 </AnimatePresence>
               </div>
 
-              <motion.div layout className="flex flex-col sm:flex-row gap-4 pt-2">
+              <motion.div layout className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
                 <button 
                   onClick={addCard}
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 border-2 border-dashed border-gray-200 text-[var(--color-graphite)] rounded-2xl hover:bg-white hover:border-gray-300 transition-colors cursor-pointer text-sm font-medium active:scale-[0.98]"
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 min-h-[44px] border-2 border-dashed border-gray-200 text-[var(--color-graphite)] rounded-2xl hover:bg-white hover:border-gray-300 transition-colors cursor-pointer text-sm font-medium active:scale-[0.98]"
                 >
                   <Plus size={18} /> Dodaj pustą fiszkę
                 </button>
@@ -323,7 +412,7 @@ export default function Scanner() {
                     setPhoto(null)
                     setStep('camera')
                   }}
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 border border-gray-200 bg-white text-[var(--color-navy)] rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer text-sm font-medium shadow-[0_2px_10px_rgb(0,0,0,0.02)] active:scale-[0.98]"
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 min-h-[44px] border border-gray-200 bg-white text-[var(--color-navy)] rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer text-sm font-medium shadow-[0_2px_10px_rgb(0,0,0,0.02)] active:scale-[0.98]"
                 >
                   <Camera size={18} /> Zeskanuj kolejną stronę
                 </button>

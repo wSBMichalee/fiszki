@@ -7,6 +7,7 @@ import { Sparkles, CheckCircle2, Layers, Flame, ArrowRight } from "lucide-react"
 type Deck = {
   id: string;
   title: string;
+  subject?: string | null;
   created_at: string;
 };
 
@@ -107,7 +108,7 @@ export default function DashboardGrid({
 
         {/* Motivational Stats Pills */}
         <div className="flex items-center gap-3 w-full md:w-auto relative z-10">
-          <div className="flex-1 md:flex-initial bg-gray-50/90 border border-gray-100 rounded-2xl p-4 min-w-[120px] flex flex-col">
+          <div className="flex-1 md:flex-initial bg-gray-50/90 border border-gray-100 rounded-2xl p-3.5 sm:p-4 min-w-[100px] sm:min-w-[120px] flex flex-col">
             <span className="text-xs font-semibold text-[var(--color-graphite)] flex items-center gap-1 mb-1">
               <Layers className="w-3.5 h-3.5 text-[var(--color-navy)]" />
               Zestawy
@@ -117,7 +118,7 @@ export default function DashboardGrid({
             </span>
           </div>
 
-          <div className="flex-1 md:flex-initial bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4 min-w-[140px] flex flex-col">
+          <div className="flex-1 md:flex-initial bg-emerald-50/70 border border-emerald-100 rounded-2xl p-3.5 sm:p-4 min-w-[120px] sm:min-w-[140px] flex flex-col">
             <span className="text-xs font-semibold text-emerald-800 flex items-center gap-1 mb-1">
               <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-success)]" />
               Opanowane
@@ -146,13 +147,13 @@ export default function DashboardGrid({
         variants={container} 
         initial="hidden" 
         animate="show"
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-5"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 sm:gap-5"
       >
         {decks.map(deck => (
           <motion.div key={deck.id} variants={item}>
             <Link 
               href={`/decks/${deck.id}`}
-              className="group relative block h-52 rounded-2xl p-5 flex flex-col justify-end overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)]"
+              className="group relative block h-48 sm:h-52 rounded-2xl p-3.5 sm:p-5 flex flex-col justify-end overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)]"
             >
               {/* Stack effect background cards (Mochi craftsmanship) */}
               <div className="absolute inset-0 bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100/60 -z-10" />
@@ -163,13 +164,20 @@ export default function DashboardGrid({
                 whileHover={{ y: -6, scale: 1.02 }}
                 whileTap={{ scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 350, damping: 22 }}
-                className="absolute inset-0 bg-white rounded-2xl z-0 p-5 flex flex-col justify-between shadow-[0_10px_30px_rgba(28,43,69,0.05)] border border-gray-100/80 origin-bottom-left group-hover:border-amber-200/80 transition-colors"
+                className="absolute inset-0 bg-white rounded-2xl z-0 p-3.5 sm:p-5 flex flex-col justify-between shadow-[0_10px_30px_rgba(28,43,69,0.05)] border border-gray-100/80 origin-bottom-left group-hover:border-amber-200/80 transition-colors"
               >
-                <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-[var(--color-navy)]/40 group-hover:text-[var(--color-gold)] group-hover:bg-amber-50/50 transition-colors">
-                  <Layers size={16} />
+                <div className="flex items-center justify-between gap-1.5">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gray-50 flex items-center justify-center text-[var(--color-navy)]/40 group-hover:text-[var(--color-gold)] group-hover:bg-amber-50/50 transition-colors shrink-0">
+                    <Layers size={15} />
+                  </div>
+                  {deck.subject && (
+                    <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200/60 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-amber-900/80 truncate max-w-[80px] sm:max-w-[120px]">
+                      {deck.subject}
+                    </span>
+                  )}
                 </div>
 
-                <h3 className="font-serif font-bold text-lg sm:text-xl text-[var(--color-navy)] leading-snug group-hover:text-[var(--color-gold)] transition-colors duration-200 line-clamp-3 relative z-10">
+                <h3 className="font-serif font-bold text-base sm:text-lg md:text-xl text-[var(--color-navy)] leading-snug group-hover:text-[var(--color-gold)] transition-colors duration-200 line-clamp-3 relative z-10">
                   {deck.title}
                 </h3>
               </motion.div>

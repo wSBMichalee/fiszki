@@ -73,7 +73,7 @@ export default function AuthCard({
           <button
             type="button"
             onClick={() => handleTabChange("login")}
-            className={`relative flex-1 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-colors duration-150 z-10 cursor-pointer ${
+            className={`relative flex-1 py-2.5 min-h-[44px] flex items-center justify-center text-xs sm:text-sm font-semibold rounded-xl transition-colors duration-150 z-10 cursor-pointer ${
               mode === "login"
                 ? "text-[var(--color-navy)]"
                 : "text-[var(--color-graphite)] hover:text-[var(--color-navy)]"
@@ -92,7 +92,7 @@ export default function AuthCard({
           <button
             type="button"
             onClick={() => handleTabChange("register")}
-            className={`relative flex-1 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-colors duration-150 z-10 cursor-pointer ${
+            className={`relative flex-1 py-2.5 min-h-[44px] flex items-center justify-center text-xs sm:text-sm font-semibold rounded-xl transition-colors duration-150 z-10 cursor-pointer ${
               mode === "register"
                 ? "text-[var(--color-navy)]"
                 : "text-[var(--color-graphite)] hover:text-[var(--color-navy)]"

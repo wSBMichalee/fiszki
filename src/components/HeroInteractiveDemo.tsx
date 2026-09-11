@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Scan, RotateCw, Check, X, Layers, Lightbulb } from "lucide-react";
+import { Sparkles, Scan, RotateCw, Check, Layers, Lightbulb } from "lucide-react";
 
 type DemoQuestion = {
   id: string;
@@ -62,7 +62,7 @@ export default function HeroInteractiveDemo() {
             setActiveTab("card");
             setIsFlipped(false);
           }}
-          className={`relative px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-160 cursor-pointer ${
+          className={`relative px-4 py-2.5 min-h-[44px] flex items-center justify-center rounded-xl text-xs sm:text-sm font-semibold transition-all duration-160 cursor-pointer ${
             activeTab === "card"
               ? "bg-[var(--color-navy)] text-white shadow-sm"
               : "text-[var(--color-graphite)] hover:text-[var(--color-navy)]"
@@ -77,7 +77,7 @@ export default function HeroInteractiveDemo() {
 
         <button
           onClick={() => setActiveTab("scan")}
-          className={`relative px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-160 cursor-pointer ${
+          className={`relative px-4 py-2.5 min-h-[44px] flex items-center justify-center rounded-xl text-xs sm:text-sm font-semibold transition-all duration-160 cursor-pointer ${
             activeTab === "scan"
               ? "bg-[var(--color-navy)] text-white shadow-sm"
               : "text-[var(--color-graphite)] hover:text-[var(--color-navy)]"
@@ -96,7 +96,7 @@ export default function HeroInteractiveDemo() {
         {activeTab === "card" ? (
           <div className="flex flex-col items-center">
             {/* 3D Card Container */}
-            <div className="w-full aspect-[4/3] sm:aspect-[16/11] relative perspective-1000">
+            <div className="w-full min-h-[290px] aspect-[4/3] sm:aspect-[16/11] relative perspective-1000">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentCard.id + (feedback || "")}
@@ -183,7 +183,7 @@ export default function HeroInteractiveDemo() {
               <button
                 type="button"
                 onClick={() => handleNextCard("review")}
-                className="flex-1 py-3 px-4 bg-white border border-gray-200 rounded-2xl text-[var(--color-navy)] font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] transition-all cursor-pointer hover:bg-gray-50"
+                className="flex-1 py-3 px-4 min-h-[44px] bg-white border border-gray-200 rounded-2xl text-[var(--color-navy)] font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] transition-all cursor-pointer hover:bg-gray-50"
               >
                 <RotateCw size={15} />
                 Powtórz
@@ -191,7 +191,7 @@ export default function HeroInteractiveDemo() {
               <button
                 type="button"
                 onClick={() => handleNextCard("learned")}
-                className="flex-1 py-3 px-4 bg-[var(--color-navy)] text-white rounded-2xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] transition-all cursor-pointer hover:bg-[var(--color-navy)]/90"
+                className="flex-1 py-3 px-4 min-h-[44px] bg-[var(--color-navy)] text-white rounded-2xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] transition-all cursor-pointer hover:bg-[var(--color-navy)]/90"
               >
                 <Check size={16} strokeWidth={2.5} />
                 Umiem to!
@@ -199,7 +199,7 @@ export default function HeroInteractiveDemo() {
             </div>
           </div>
         ) : (
-          <div className="relative w-full rounded-3xl overflow-hidden border border-gray-200/90 shadow-[0_16px_40px_rgba(28,43,69,0.08)] bg-[var(--color-navy)] text-white p-5 sm:p-6 flex flex-col justify-between aspect-[4/3] sm:aspect-[16/11]">
+          <div className="relative w-full rounded-3xl overflow-hidden border border-gray-200/90 shadow-[0_16px_40px_rgba(28,43,69,0.08)] bg-[var(--color-navy)] text-white p-5 sm:p-6 flex flex-col justify-between min-h-[290px] aspect-[4/3] sm:aspect-[16/11]">
             <div className="flex items-center justify-between text-xs font-medium z-10">
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />

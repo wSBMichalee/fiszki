@@ -176,7 +176,7 @@ export default function StudyModeStandard({
 
           <button 
             onClick={onSwitchMode}
-            className="flex items-center gap-1.5 bg-white/80 hover:bg-white text-[var(--color-navy)] px-3 py-1 rounded-full border border-gray-200 shadow-xs text-xs font-semibold transition-all cursor-pointer active:scale-95"
+            className="flex items-center gap-1.5 bg-white/80 hover:bg-white text-[var(--color-navy)] px-3.5 py-1.5 min-h-[38px] rounded-full border border-gray-200 shadow-xs text-xs font-semibold transition-all cursor-pointer active:scale-95"
           >
             <ArrowRightLeft size={13} /> 
             Tryb 3D
@@ -197,7 +197,7 @@ export default function StudyModeStandard({
       </div>
       
       {/* Card area */}
-      <div className="w-full aspect-[3/4] relative perspective-1000 px-4">
+      <div className="w-full aspect-[3/4] relative perspective-1000 px-1 sm:px-4">
         <AnimatePresence mode="popLayout" custom={direction}>
           <motion.div
             key={currentCard.id}
@@ -230,16 +230,16 @@ export default function StudyModeStandard({
             }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
             style={{ transformStyle: "preserve-3d" }}
-            className="w-full h-full absolute inset-0 cursor-pointer px-4"
+            className="w-full h-full absolute inset-0 cursor-pointer"
             onClick={() => setIsFlipped(!isFlipped)}
           >
             {/* Front */}
-            <div className="absolute inset-0 mx-4 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border border-gray-200/90 flex flex-col items-center justify-center p-8 sm:p-10 text-center select-none">
+            <div className="absolute inset-0 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border border-gray-200/90 flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none">
               <span className="absolute top-6 text-xs font-bold uppercase tracking-widest text-[var(--color-navy)]/35">
                 Pytanie
               </span>
               
-              <h3 className="font-serif font-bold text-2xl sm:text-3xl text-[var(--color-navy)] leading-snug tracking-tight my-auto">
+              <h3 className="font-serif font-bold text-xl sm:text-2xl md:text-3xl text-[var(--color-navy)] leading-snug tracking-tight my-auto">
                 {currentCard.question}
               </h3>
               
@@ -250,14 +250,14 @@ export default function StudyModeStandard({
             
             {/* Back */}
             <div 
-              className="absolute inset-0 mx-4 backface-hidden bg-white rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border-2 border-[var(--color-gold)] flex flex-col items-center justify-center p-8 sm:p-10 text-center select-none"
+              className="absolute inset-0 backface-hidden bg-white rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border-2 border-[var(--color-gold)] flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none"
               style={{ transform: "rotateY(180deg)" }}
             >
               <span className="absolute top-6 text-xs font-bold uppercase tracking-widest text-[var(--color-gold)]">
                 Odpowiedź
               </span>
               
-              <p className="font-serif font-semibold text-xl sm:text-2xl text-[var(--color-navy)] leading-snug tracking-tight my-auto">
+              <p className="font-serif font-semibold text-lg sm:text-xl md:text-2xl text-[var(--color-navy)] leading-snug tracking-tight my-auto">
                 {currentCard.answer}
               </p>
 

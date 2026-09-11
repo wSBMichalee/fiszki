@@ -50,7 +50,7 @@ export default function StepsSection() {
         {/* Krok 2: Edytor wygenerowanych fiszek */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center mb-24">
           {/* Real App Mockup: Edit Deck Interface */}
-          <div className="relative rounded-3xl overflow-hidden border border-black/8 shadow-[0_16px_40px_rgba(28,43,69,0.08)] bg-white p-6 aspect-[4/3] flex flex-col justify-between">
+          <div className="relative rounded-3xl overflow-hidden border border-black/8 shadow-[0_16px_40px_rgba(28,43,69,0.08)] bg-white p-4 sm:p-6 min-h-[320px] aspect-[4/3] flex flex-col justify-between">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-gray-300" />

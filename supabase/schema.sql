@@ -8,8 +8,12 @@ create table if not exists public.decks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade not null,
   title text not null,
+  subject text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Dla istniejących baz danych uruchom migrację:
+-- ALTER TABLE public.decks ADD COLUMN IF NOT EXISTS subject text;
 
 -- 2. Tabela pojedynczych kart / pytań (cards)
 create table if not exists public.cards (

@@ -31,6 +31,7 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
 }
 
 @utility perspective-1000 {
