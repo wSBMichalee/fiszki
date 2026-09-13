@@ -80,7 +80,7 @@ export default function MethodStep({
             <FileText size={24} />
           </div>
           <h3 className="font-bold text-[var(--color-navy)] mb-1">Wklej tekst</h3>
-          <p className="text-xs text-[var(--color-graphite)] leading-relaxed">Skopiuj i wklej fragment podręcznika lub notatek.</p>
+          <p className="text-xs text-[var(--color-graphite)] leading-relaxed">Skopiuj tekst z Notatek, Google Keep lub dowolnej aplikacji i wklej tutaj.</p>
         </button>
       </div>
     </motion.div>
