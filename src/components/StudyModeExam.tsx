@@ -260,7 +260,7 @@ export default function StudyModeExam({
       
       {/* Card area with 3D examination stack effect */}
       <div className="w-full aspect-[3/4] relative perspective-1000 px-1 sm:px-4">
-        <AnimatePresence mode="popLayout" custom={direction}>
+        <AnimatePresence custom={direction}>
           <motion.div
             key={currentCard.id}
             custom={direction}
@@ -297,7 +297,7 @@ export default function StudyModeExam({
           >
             {/* Front */}
             <div 
-              className="absolute inset-0 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border border-gray-200/90 flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none"
+              className="absolute inset-0 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border border-gray-200/90 flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none overflow-y-auto custom-scrollbar"
               style={!is3D ? { opacity: isFlipped ? 0 : 1, transition: 'opacity 0.2s' } : {}}
             >
               <span className="absolute top-6 text-xs font-bold uppercase tracking-widest text-[var(--color-navy)]/35">
@@ -315,7 +315,7 @@ export default function StudyModeExam({
             
             {/* Back */}
             <div 
-              className="absolute inset-0 backface-hidden bg-white rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border-2 border-[var(--color-gold)] flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none"
+              className="absolute inset-0 backface-hidden bg-white rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border-2 border-[var(--color-gold)] flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none overflow-y-auto custom-scrollbar"
               style={
                 is3D 
                   ? { transform: "rotateY(180deg)" } 

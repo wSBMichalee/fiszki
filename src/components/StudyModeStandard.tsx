@@ -119,7 +119,7 @@ export default function StudyModeStandard({
         </button>
 
         <div className="w-full max-w-[320px] aspect-[3/4] relative perspective-1000">
-          <AnimatePresence mode="popLayout" custom={direction}>
+          <AnimatePresence custom={direction}>
             <motion.div
               key={currentCard.id}
               custom={direction}
@@ -160,7 +160,7 @@ export default function StudyModeStandard({
             >
             {/* Front */}
             <div 
-              className="absolute inset-0 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border border-gray-200/90 flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none"
+              className="absolute inset-0 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border border-gray-200/90 flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none overflow-y-auto custom-scrollbar"
               style={!is3D ? { opacity: isFlipped ? 0 : 1, transition: 'opacity 0.2s' } : {}}
             >
               <span className="absolute top-6 text-xs font-bold uppercase tracking-widest text-[var(--color-navy)]/35">
@@ -178,7 +178,7 @@ export default function StudyModeStandard({
             
             {/* Back */}
             <div 
-              className="absolute inset-0 backface-hidden bg-white rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border-2 border-[var(--color-gold)] flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none"
+              className="absolute inset-0 backface-hidden bg-white rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border-2 border-[var(--color-gold)] flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none overflow-y-auto custom-scrollbar"
               style={
                 is3D 
                   ? { transform: "rotateY(180deg)" } 
