@@ -1,31 +1,39 @@
-'use client'
-
 import { useState } from 'react'
 import Link from 'next/link'
-import { Check, X, ArrowRightLeft, Trophy, Sparkles, RotateCcw, ArrowLeft } from 'lucide-react'
+import { Check, X, ArrowRightLeft, Trophy, Sparkles, RotateCcw, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { Card } from './StudyMode'
+import type { Card, StudyGoal } from './StudyMode'
+import { getWeightedShuffle } from './StudyMode'
+
+import { Box } from 'lucide-react'
 
 interface StudyModeExamProps {
   deckId: string
   cards: Card[]
+  currentIndex: number
+  setCards: React.Dispatch<React.SetStateAction<Card[]>>
+  setCurrentIndex: React.Dispatch<React.SetStateAction<number>>
   onCardLearned: (cardId: string, learned: boolean) => void
-  onSwitchMode: () => void
+  onSwitchMode: (mode: 'standard' | 'exam' | 'defense') => void
+  currentMode: 'standard' | 'exam' | 'defense'
+  studyGoal?: StudyGoal
 }
 
 export default function StudyModeExam({
-  cards: initialDeck,
+  cards,
+  currentIndex,
+  setCards,
+  setCurrentIndex,
   onCardLearned,
   onSwitchMode,
+  currentMode,
+  studyGoal = 'other'
 }: StudyModeExamProps) {
-  // Losowanie bez zwracania: tasujemy karty na starcie egzaminu
-  const [cards, setCards] = useState<Card[]>(() =>
-    [...initialDeck].sort(() => Math.random() - 0.5)
-  )
-  const [currentIndex, setCurrentIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [isFinished, setIsFinished] = useState(false)
   const [direction, setDirection] = useState<'left' | 'right' | null>(null)
+  const [showLearned, setShowLearned] = useState(false)
+  const [is3D, setIs3D] = useState(true)
 
   const currentCard = cards[currentIndex]
 
@@ -55,8 +63,8 @@ export default function StudyModeExam({
   }
 
   const handleRestartExam = () => {
-    // Ponowne przetasowanie bez zwracania
-    const reShuffled = [...cards].sort(() => Math.random() - 0.5)
+    // Ponowne ważone przetasowanie bez zwracania
+    const reShuffled = getWeightedShuffle(cards)
     setCards(reShuffled)
     setCurrentIndex(0)
     setIsFlipped(false)
@@ -70,13 +78,23 @@ export default function StudyModeExam({
   const successRate = totalCount > 0 ? Math.round((learnedCount / totalCount) * 100) : 0
 
   if (isFinished) {
+    let heading = successRate === 100 ? "Wynik: 100%!" : successRate >= 70 ? "Egzamin zdany!" : "Koniec egzaminu"
+    if (studyGoal === 'oral') {
+      heading = successRate === 100 ? "Obrona bezbłędna!" : successRate >= 70 ? "Obrona zaliczona!" : "Koniec obrony"
+    } else if (studyGoal === 'written') {
+      heading = successRate === 100 ? "Test na 100%!" : successRate >= 70 ? "Test zdany!" : "Koniec testu"
+    }
+
+    const cardsToReview = cards.filter(c => !c.learned)
+    const cardsLearned = cards.filter(c => c.learned)
+
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-4 py-8">
+      <div className="flex-1 flex flex-col items-center justify-start p-4 py-8 overflow-y-auto w-full">
         <motion.div 
           initial={{ opacity: 0, scale: 0.85, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 280, damping: 20 }}
-          className="w-full max-w-md bg-white rounded-[36px] shadow-[0_20px_50px_rgba(28,43,69,0.08)] border border-gray-100 p-8 sm:p-10 text-center relative overflow-hidden"
+          className="w-full max-w-xl bg-white rounded-[36px] shadow-[0_20px_50px_rgba(28,43,69,0.08)] border border-gray-100 p-8 sm:p-10 text-center relative overflow-hidden"
         >
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-[var(--color-gold)]/15 rounded-full blur-3xl pointer-events-none" />
 
@@ -98,25 +116,63 @@ export default function StudyModeExam({
           </motion.div>
           
           <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[var(--color-navy)] mb-2 tracking-tight">
-            {successRate === 100 ? "Wynik: 100%!" : successRate >= 70 ? "Egzamin zdany!" : "Koniec egzaminu"}
+            {heading}
           </h2>
           
-          <p className="text-[var(--color-graphite)] text-base mb-8 leading-relaxed">
-            {successRate === 100 
-              ? "Doskonale! Znasz odpowiedź na każde losowe pytanie." 
-              : `Poprawne odpowiedzi: ${learnedCount} z ${totalCount} wylosowanych fiszek.`}
-          </p>
+          <p className="text-xl font-bold text-[var(--color-gold)] mb-8">Wynik: {successRate}%</p>
 
-          {/* Stats Badges */}
-          <div className="grid grid-cols-2 gap-3 mb-8">
-            <div className="bg-emerald-50/80 border border-emerald-200/60 rounded-2xl p-4 flex flex-col items-center">
-              <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider mb-1">Poprawne</span>
-              <span className="text-2xl font-bold text-[var(--color-success)]">{learnedCount}</span>
-            </div>
-            <div className="bg-amber-50/80 border border-amber-200/60 rounded-2xl p-4 flex flex-col items-center">
-              <span className="text-xs font-semibold text-amber-800 uppercase tracking-wider mb-1">Wynik</span>
-              <span className="text-2xl font-bold text-[var(--color-gold)]">{successRate}%</span>
-            </div>
+          {/* Review Lists */}
+          <div className="w-full text-left space-y-6 mb-8 border-t border-gray-100 pt-6">
+            <p className="text-[var(--color-graphite)] text-base mb-8 leading-relaxed">
+              {successRate === 100 
+                ? "Doskonale! Znasz odpowiedź na każde losowe pytanie." 
+                : `Poprawne odpowiedzi: ${learnedCount} z ${totalCount} wylosowanych fiszek. Fiszki, z którymi masz trudność, pojawiają się częściej.`}
+            </p>
+            {cardsToReview.length > 0 && (
+              <div>
+                <h3 className="font-bold text-[var(--color-brick)] mb-3 flex items-center gap-2">
+                  <X size={18} />
+                  Błędy podczas egzaminu ({cardsToReview.length})
+                </h3>
+                <div className="flex flex-col gap-2">
+                  {cardsToReview.map(c => (
+                    <div key={c.id} className="p-3 bg-red-50/50 border border-red-100 rounded-xl text-sm font-medium text-[var(--color-navy)]">
+                      {c.question}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {cardsLearned.length > 0 && (
+              <div className="bg-emerald-50/30 rounded-xl border border-emerald-100 overflow-hidden">
+                <button 
+                  onClick={() => setShowLearned(!showLearned)}
+                  className="w-full flex items-center justify-between p-4 font-bold text-[var(--color-success)] hover:bg-emerald-50/50 transition-colors"
+                >
+                  <span className="flex items-center gap-2"><Check size={18} /> Poprawne odpowiedzi ({cardsLearned.length})</span>
+                  {showLearned ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </button>
+                <AnimatePresence>
+                  {showLearned && (
+                    <motion.div 
+                      initial={{ height: 0 }}
+                      animate={{ height: 'auto' }}
+                      exit={{ height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-4 pt-0 flex flex-col gap-2 border-t border-emerald-100/50">
+                        {cardsLearned.map(c => (
+                          <div key={c.id} className="p-3 bg-white border border-emerald-100 rounded-xl text-sm font-medium text-[var(--color-navy)] opacity-80">
+                            {c.question}
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
           
           {/* Action Buttons */}
@@ -131,14 +187,6 @@ export default function StudyModeExam({
               <RotateCcw size={18} />
               Rozpocznij nowy egzamin
             </motion.button>
-
-            <button 
-              onClick={onSwitchMode}
-              className="w-full py-3.5 px-6 bg-white border-2 border-gray-200 text-[var(--color-navy)] rounded-2xl font-semibold text-base flex items-center justify-center gap-2 hover:bg-gray-50 shadow-[0_4px_0_#e5e7eb] active:shadow-none active:translate-y-1 transition-all cursor-pointer"
-            >
-              <ArrowRightLeft size={18} />
-              Wróć do trybu standardowego
-            </button>
 
             <Link 
               href="/dashboard"
@@ -168,13 +216,33 @@ export default function StudyModeExam({
             </span>
           </div>
 
-          <button 
-            onClick={onSwitchMode}
-            className="flex items-center gap-1.5 bg-white/80 hover:bg-white text-[var(--color-navy)] px-3.5 py-1.5 min-h-[38px] rounded-full border border-gray-200 shadow-xs text-xs font-semibold transition-all cursor-pointer active:scale-95"
-          >
-            <ArrowRightLeft size={13} /> 
-            Tryb standard
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="flex bg-white/80 p-0.5 rounded-full border border-gray-200 shadow-xs">
+              {(['standard', 'exam', 'defense'] as const).map(mode => (
+                <button
+                  key={mode}
+                  onClick={() => onSwitchMode(mode)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                    currentMode === mode
+                      ? 'bg-[var(--color-navy)] text-white shadow-sm'
+                      : 'text-[var(--color-graphite)] hover:text-[var(--color-navy)] hover:bg-gray-50'
+                  }`}
+                >
+                  {mode === 'standard' ? 'Przeglądanie' : mode === 'exam' ? 'Egzamin' : 'Obrona'}
+                </button>
+              ))}
+            </div>
+            
+            <button
+              onClick={() => setIs3D(!is3D)}
+              className={`p-1.5 rounded-full border shadow-xs transition-colors ${
+                is3D ? 'bg-[var(--color-gold)] text-white border-transparent' : 'bg-white/80 text-[var(--color-graphite)] border-gray-200 hover:bg-gray-50'
+              }`}
+              title="Przełącz animację 3D"
+            >
+              <Box size={14} />
+            </button>
+          </div>
         </div>
 
         {/* Dynamic Spring Progress Bar */}
@@ -208,7 +276,7 @@ export default function StudyModeExam({
               x: 0, 
               rotateZ: 0,
               opacity: 1, 
-              rotateY: isFlipped ? 180 : 0 
+              rotateY: isFlipped && is3D ? 180 : 0 
             }}
             exit={{ 
               x: direction === 'right' ? 420 : direction === 'left' ? -420 : 0, 
@@ -223,12 +291,15 @@ export default function StudyModeExam({
               }
             }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
-            style={{ transformStyle: "preserve-3d" }}
+            style={{ transformStyle: is3D ? "preserve-3d" : "flat" }}
             className="w-full h-full absolute inset-0 cursor-pointer"
             onClick={() => setIsFlipped(!isFlipped)}
           >
             {/* Front */}
-            <div className="absolute inset-0 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border border-gray-200/90 flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none">
+            <div 
+              className="absolute inset-0 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border border-gray-200/90 flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none"
+              style={!is3D ? { opacity: isFlipped ? 0 : 1, transition: 'opacity 0.2s' } : {}}
+            >
               <span className="absolute top-6 text-xs font-bold uppercase tracking-widest text-[var(--color-navy)]/35">
                 Pytanie egzaminacyjne
               </span>
@@ -245,7 +316,11 @@ export default function StudyModeExam({
             {/* Back */}
             <div 
               className="absolute inset-0 backface-hidden bg-white rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border-2 border-[var(--color-gold)] flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none"
-              style={{ transform: "rotateY(180deg)" }}
+              style={
+                is3D 
+                  ? { transform: "rotateY(180deg)" } 
+                  : { transform: "rotateY(0deg)", opacity: isFlipped ? 1 : 0, transition: 'opacity 0.2s', pointerEvents: isFlipped ? 'auto' : 'none' }
+              }
             >
               <span className="absolute top-6 text-xs font-bold uppercase tracking-widest text-[var(--color-gold)]">
                 Odpowiedź

@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { notFound } from 'next/navigation'
 import StudyMode from '@/components/StudyMode'
+import DeckGallery from '@/components/DeckGallery'
 
 export default async function DeckPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -30,13 +31,16 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
     <main className="flex-1 max-w-2xl w-full mx-auto p-4 md:p-8 flex flex-col min-h-[calc(100dvh-64px)]">
       <div className="mb-4 sm:mb-6 flex justify-between items-center gap-3">
         <h1 className="text-xl sm:text-2xl font-serif text-[--color-navy] line-clamp-1 min-w-0">{deck.title}</h1>
-        <span className="shrink-0 text-xs sm:text-sm font-medium text-[--color-graphite] bg-white border border-gray-200 px-3 py-1 rounded-full shadow-sm">
-          {cards.length} fiszek
-        </span>
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <DeckGallery images={deck.source_image_urls} />
+          <span className="shrink-0 text-xs sm:text-sm font-medium text-[--color-graphite] bg-white border border-gray-200 px-3 py-1 sm:py-1.5 rounded-full shadow-sm">
+            {cards.length} fiszek
+          </span>
+        </div>
       </div>
       
       {cards.length > 0 ? (
-        <StudyMode deckId={id} initialCards={cards} />
+        <StudyMode key={id} deckId={id} initialCards={cards} />
       ) : (
         <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300 shadow-sm">
           <p className="text-[--color-graphite]">Ten zestaw nie ma jeszcze żadnych fiszek.</p>

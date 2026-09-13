@@ -1,14 +1,15 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Camera, RefreshCcw, Save, Trash2, Plus, BookOpen, ArrowRight, ArrowLeft } from 'lucide-react'
+import { Camera, RefreshCcw, Save, Trash2, Plus, BookOpen, ArrowRight, ArrowLeft, Upload, FileText } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { saveDeck } from '@/app/decks/new/actions'
 import { motion, AnimatePresence } from 'framer-motion'
 import Button from '@/components/Button'
+import { createClient } from '@/utils/supabase/client'
 
 type Card = { question: string, answer: string }
-type Step = 'subject' | 'camera' | 'preview' | 'loading' | 'edit'
+type Step = 'subject' | 'method' | 'camera' | 'preview' | 'text' | 'loading' | 'edit'
 
 export default function Scanner() {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -17,7 +18,9 @@ export default function Scanner() {
   const [step, setStep] = useState<Step>('subject')
   const [subject, setSubject] = useState('')
   const [photo, setPhoto] = useState<string | null>(null)
+  const [textInput, setTextInput] = useState('')
   const [cards, setCards] = useState<Card[]>([])
+  const [noteImages, setNoteImages] = useState<string[]>([])
   const [error, setError] = useState('')
   const [title, setTitle] = useState('Nowy zestaw fiszek')
   const [isSaving, setIsSaving] = useState(false)
@@ -59,12 +62,19 @@ export default function Scanner() {
     const video = videoRef.current
     const canvas = canvasRef.current
     
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
+    let width = video.videoWidth
+    let height = video.videoHeight
+    if (width > 1600) {
+      height = Math.round((height * 1600) / width)
+      width = 1600
+    }
+    
+    canvas.width = width
+    canvas.height = height
     
     const ctx = canvas.getContext('2d')
     if (ctx) {
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      ctx.drawImage(video, 0, 0, width, height)
       const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
       setPhoto(dataUrl)
       setStep('preview')
@@ -76,8 +86,29 @@ export default function Scanner() {
     if (!file) return
     const reader = new FileReader()
     reader.onload = (event) => {
-      setPhoto(event.target?.result as string)
-      setStep('preview')
+      const dataUrl = event.target?.result as string
+      
+      const img = new Image()
+      img.onload = () => {
+        let width = img.width
+        let height = img.height
+        if (width > 1600) {
+          height = Math.round((height * 1600) / width)
+          width = 1600
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height)
+          setPhoto(canvas.toDataURL('image/jpeg', 0.8))
+        } else {
+          setPhoto(dataUrl)
+        }
+        setStep('preview')
+      }
+      img.src = dataUrl
     }
     reader.readAsDataURL(file)
   }
@@ -98,6 +129,7 @@ export default function Scanner() {
       if (!res.ok) throw new Error(data.error || 'Wystąpił błąd')
       
       setCards((prev) => [...prev, ...data.cards])
+      setNoteImages((prev) => [...prev, photo]) // Save image for uploading later
       if (subject.trim() && title === 'Nowy zestaw fiszek') {
         setTitle(`Zestaw: ${subject.trim()}`)
       }
@@ -108,11 +140,85 @@ export default function Scanner() {
     }
   }
 
+  const parseText = async () => {
+    if (!textInput.trim()) return
+    setStep('loading')
+    setError('')
+    
+    try {
+      const res = await fetch('/api/parse-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: textInput.trim(), subject: subject.trim() })
+      })
+      
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Wystąpił błąd')
+      
+      setCards((prev) => [...prev, ...data.cards])
+      if (subject.trim() && title === 'Nowy zestaw fiszek') {
+        setTitle(`Zestaw: ${subject.trim()}`)
+      }
+      setStep('edit')
+      setTextInput('')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Wystąpił błąd')
+      setStep('text')
+    }
+  }
+
   const handleSave = async () => {
     if (cards.length === 0) return
     setIsSaving(true)
     try {
-      const deckId = await saveDeck(title, cards, subject.trim())
+      const uploadedUrls: string[] = []
+      
+      if (noteImages.length > 0) {
+        const supabase = createClient()
+        for (let i = 0; i < noteImages.length; i++) {
+          try {
+            const base64Data = noteImages[i].split(',')[1]
+            const mime = noteImages[i].split(',')[0].match(/:(.*?);/)?.[1] || 'image/jpeg'
+            
+            // Konwersja base64 -> Blob
+            const byteCharacters = atob(base64Data)
+            const byteArrays = []
+            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+              const slice = byteCharacters.slice(offset, offset + 512)
+              const byteNumbers = new Array(slice.length)
+              for (let j = 0; j < slice.length; j++) {
+                byteNumbers[j] = slice.charCodeAt(j)
+              }
+              byteArrays.push(new Uint8Array(byteNumbers))
+            }
+            const blob = new Blob(byteArrays, { type: mime })
+            
+            const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.jpg`
+            
+            const { data, error } = await supabase.storage
+              .from('deck-images')
+              .upload(filename, blob, {
+                contentType: mime
+              })
+              
+            if (error) {
+              console.error('Błąd wgrywania zdjęcia', error)
+            } else if (data) {
+              const { data: publicUrlData } = supabase.storage
+                .from('deck-images')
+                .getPublicUrl(data.path)
+                
+              if (publicUrlData) {
+                uploadedUrls.push(publicUrlData.publicUrl)
+              }
+            }
+          } catch (uploadErr) {
+            console.error('Failed to upload image part', uploadErr)
+          }
+        }
+      }
+
+      const deckId = await saveDeck(title, cards, subject.trim(), uploadedUrls)
       router.push(`/decks/${deckId}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Wystąpił błąd')
@@ -162,7 +268,7 @@ export default function Scanner() {
                 onSubmit={(e) => {
                   e.preventDefault()
                   if (subject.trim()) {
-                    setStep('camera')
+                    setStep('method')
                   }
                 }}
                 className="w-full flex flex-col gap-4 text-left"
@@ -193,10 +299,132 @@ export default function Scanner() {
                   className="w-full gap-2 mt-2 group"
                   disabled={!subject.trim()}
                 >
-                  <span>Przejdź do skanera</span>
+                  <span>Dalej</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </form>
+            </div>
+          </motion.div>
+        )}
+
+        {step === 'method' && (
+          <motion.div
+            key="method"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 text-center relative"
+          >
+            <button
+              type="button"
+              onClick={() => setStep('subject')}
+              className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 px-3.5 py-2.5 min-h-[44px] rounded-full bg-gray-100 text-[var(--color-navy)] text-xs font-semibold flex items-center gap-1.5 hover:bg-gray-200 cursor-pointer transition-colors"
+            >
+              <ArrowLeft size={16} />
+              Wróć
+            </button>
+            
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[var(--color-navy)] tracking-tight mb-2 mt-10 sm:mt-0">
+              Jak chcesz dodać notatki?
+            </h2>
+            <p className="text-[var(--color-graphite)] text-sm mb-8 leading-relaxed max-w-sm">
+              Wybierz najwygodniejszy sposób wprowadzenia materiału do analizy dla: <strong>{subject}</strong>.
+            </p>
+
+            <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Take Photo */}
+              <button
+                onClick={() => setStep('camera')}
+                className="flex flex-col items-center text-center p-6 rounded-2xl border-2 border-gray-100 hover:border-[var(--color-gold)]/50 hover:bg-amber-50/30 transition-all duration-200 cursor-pointer group"
+              >
+                <div className="w-12 h-12 rounded-xl bg-gray-100 group-hover:bg-[var(--color-gold)]/20 text-[var(--color-navy)] group-hover:text-[var(--color-gold)] flex items-center justify-center mb-4 transition-colors">
+                  <Camera size={24} />
+                </div>
+                <h3 className="font-bold text-[var(--color-navy)] mb-1">Zrób zdjęcie</h3>
+                <p className="text-xs text-[var(--color-graphite)] leading-relaxed">Użyj aparatu, aby zrobić zdjęcie papierowym notatkom.</p>
+              </button>
+
+              {/* Upload Photo */}
+              <label className="flex flex-col items-center text-center p-6 rounded-2xl border-2 border-gray-100 hover:border-[var(--color-gold)]/50 hover:bg-amber-50/30 transition-all duration-200 cursor-pointer group">
+                <div className="w-12 h-12 rounded-xl bg-gray-100 group-hover:bg-[var(--color-gold)]/20 text-[var(--color-navy)] group-hover:text-[var(--color-gold)] flex items-center justify-center mb-4 transition-colors">
+                  <Upload size={24} />
+                </div>
+                <h3 className="font-bold text-[var(--color-navy)] mb-1">Wgraj zdjęcie</h3>
+                <p className="text-xs text-[var(--color-graphite)] leading-relaxed">Wybierz obraz z galerii lub plik z urządzenia.</p>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+
+              {/* Paste Text */}
+              <button
+                onClick={() => setStep('text')}
+                className="flex flex-col items-center text-center p-6 rounded-2xl border-2 border-gray-100 hover:border-[var(--color-gold)]/50 hover:bg-amber-50/30 transition-all duration-200 cursor-pointer group"
+              >
+                <div className="w-12 h-12 rounded-xl bg-gray-100 group-hover:bg-[var(--color-gold)]/20 text-[var(--color-navy)] group-hover:text-[var(--color-gold)] flex items-center justify-center mb-4 transition-colors">
+                  <FileText size={24} />
+                </div>
+                <h3 className="font-bold text-[var(--color-navy)] mb-1">Wklej tekst</h3>
+                <p className="text-xs text-[var(--color-graphite)] leading-relaxed">Skopiuj i wklej fragment podręcznika lub notatek.</p>
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {step === 'text' && (
+          <motion.div
+            key="text"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1 flex flex-col items-center justify-start p-4 sm:p-8 relative"
+          >
+            <div className="w-full max-w-3xl flex flex-col h-full pt-12 sm:pt-4">
+              <button
+                type="button"
+                onClick={() => setStep('method')}
+                className="absolute top-4 left-4 z-20 px-3.5 py-2.5 min-h-[44px] rounded-full bg-gray-100 text-[var(--color-navy)] text-xs font-semibold flex items-center gap-1.5 hover:bg-gray-200 cursor-pointer transition-colors"
+              >
+                <ArrowLeft size={16} />
+                Wróć
+              </button>
+              
+              <div className="flex flex-col items-center mb-6">
+                <h2 className="text-2xl font-serif font-bold text-[var(--color-navy)]">
+                  Wklej notatki
+                </h2>
+                <p className="text-[var(--color-graphite)] text-sm mt-1 text-center">
+                  Wklej poniżej fragment tekstu (np. artykuł, notatki), aby zamienić go na fiszki.
+                </p>
+              </div>
+              
+              <textarea
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Wklej tekst tutaj..."
+                className="flex-1 min-h-[300px] w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 text-sm font-medium text-[var(--color-navy)] focus:outline-none focus:ring-2 focus:ring-[var(--color-navy)]/15 focus:border-[var(--color-navy)] transition-all resize-none mb-4"
+              />
+              
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 text-[var(--color-brick)] text-sm rounded-xl border border-red-100">
+                  {error}
+                </div>
+              )}
+
+              <Button
+                onClick={parseText}
+                variant="primary"
+                size="lg"
+                disabled={!textInput.trim()}
+                className="w-full shrink-0"
+              >
+                Wygeneruj fiszki z tekstu
+              </Button>
             </div>
           </motion.div>
         )}
@@ -210,16 +438,14 @@ export default function Scanner() {
             transition={{ duration: 0.3 }}
             className="flex-1 flex flex-col bg-black relative"
           >
-            {subject && (
-              <button
-                type="button"
-                onClick={() => setStep('subject')}
-                className="absolute top-4 left-4 z-20 px-3.5 py-2.5 min-h-[44px] rounded-full bg-black/50 backdrop-blur-md text-white/90 text-xs font-semibold flex items-center gap-1.5 hover:bg-black/70 cursor-pointer transition-colors border border-white/10"
-              >
-                <ArrowLeft size={16} />
-                <span className="truncate max-w-[150px]">{subject}</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setStep('method')}
+              className="absolute top-4 left-4 z-20 px-3.5 py-2.5 min-h-[44px] rounded-full bg-black/50 backdrop-blur-md text-white/90 text-xs font-semibold flex items-center gap-1.5 hover:bg-black/70 cursor-pointer transition-colors border border-white/10"
+            >
+              <ArrowLeft size={16} />
+              Wróć
+            </button>
 
             <video 
               ref={videoRef} 
@@ -245,19 +471,6 @@ export default function Scanner() {
               >
                 <div className="w-16 h-16 bg-white rounded-full"></div>
               </button>
-              
-              <div className="relative">
-                <label className="px-6 py-2.5 min-h-[44px] bg-white/10 backdrop-blur-md rounded-full text-white text-sm font-medium border border-white/10 cursor-pointer hover:bg-white/20 transition-colors active:scale-95 flex items-center justify-center">
-                  Wgraj ze zdjęć
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    capture="environment" 
-                    onChange={handleFileUpload}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                </label>
-              </div>
             </div>
             <canvas ref={canvasRef} className="hidden" />
           </motion.div>
@@ -276,10 +489,10 @@ export default function Scanner() {
             
             <div className="absolute bottom-0 inset-x-0 p-6 flex justify-between bg-gradient-to-t from-black/80 to-transparent gap-4">
               <button 
-                onClick={() => setStep('camera')}
+                onClick={() => setStep('method')}
                 className="flex-1 py-3.5 min-h-[44px] bg-white/20 text-white rounded-xl font-medium backdrop-blur-md cursor-pointer transition-transform duration-[160ms] active:scale-[0.97] border border-white/10 flex items-center justify-center"
               >
-                Powtórz
+                Anuluj
               </button>
               <button 
                 onClick={parseImage}
@@ -311,7 +524,7 @@ export default function Scanner() {
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
             >
-              <h2 className="text-2xl font-serif font-bold text-[var(--color-navy)] tracking-tight">Analizowanie notatek...</h2>
+              <h2 className="text-2xl font-serif font-bold text-[var(--color-navy)] tracking-tight">Analizowanie materiału...</h2>
               <p className="text-[var(--color-graphite)] mt-3">To może zająć kilkanaście sekund. Sztuczna inteligencja wyciąga pytania i odpowiedzi.</p>
             </motion.div>
           </motion.div>
@@ -409,12 +622,11 @@ export default function Scanner() {
                 </button>
                 <button 
                   onClick={() => {
-                    setPhoto(null)
-                    setStep('camera')
+                    setStep('method')
                   }}
                   className="flex-1 flex items-center justify-center gap-2 py-3.5 min-h-[44px] border border-gray-200 bg-white text-[var(--color-navy)] rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer text-sm font-medium shadow-[0_2px_10px_rgb(0,0,0,0.02)] active:scale-[0.98]"
                 >
-                  <Camera size={18} /> Zeskanuj kolejną stronę
+                  <BookOpen size={18} /> Dodaj kolejną stronę / tekst
                 </button>
               </motion.div>
             </div>

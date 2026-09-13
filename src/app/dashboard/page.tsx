@@ -14,6 +14,10 @@ export default async function DashboardPage() {
   const deckList = decks || []
   const deckIds = deckList.map(d => d.id)
 
+  const lastStudiedDeck = [...deckList]
+    .filter(d => d.last_studied_at)
+    .sort((a, b) => new Date(b.last_studied_at!).getTime() - new Date(a.last_studied_at!).getTime())[0] || null
+
   let totalCards = 0
   let learnedCards = 0
 
@@ -45,6 +49,7 @@ export default async function DashboardPage() {
       <DashboardGrid 
         decks={deckList} 
         stats={{ totalCards, learnedCards }}
+        lastStudiedDeck={lastStudiedDeck}
       />
     </main>
   )

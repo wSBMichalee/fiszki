@@ -9,6 +9,7 @@ type Deck = {
   title: string;
   subject?: string | null;
   created_at: string;
+  last_studied_at?: string | null;
 };
 
 type Stats = {
@@ -18,10 +19,12 @@ type Stats = {
 
 export default function DashboardGrid({ 
   decks,
-  stats 
+  stats,
+  lastStudiedDeck
 }: { 
   decks: Deck[];
   stats?: Stats;
+  lastStudiedDeck?: Deck | null;
 }) {
   const container: Variants = {
     hidden: { opacity: 0 },
@@ -81,6 +84,42 @@ export default function DashboardGrid({
 
   return (
     <div className="space-y-8">
+      {/* Continue Studying Widget */}
+      {lastStudiedDeck && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 280, damping: 22 }}
+          className="bg-[var(--color-navy)] rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden shadow-[0_12px_40px_rgba(28,43,69,0.15)]"
+        >
+          <div className="absolute -right-10 -top-10 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="space-y-3 relative z-10 max-w-xl">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-xs font-bold text-white uppercase tracking-wider border border-white/10">
+              Ostatnio używane
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
+              {lastStudiedDeck.title}
+            </h2>
+            {lastStudiedDeck.subject && (
+              <p className="text-white/70 text-sm sm:text-base font-medium">
+                Przedmiot: {lastStudiedDeck.subject}
+              </p>
+            )}
+          </div>
+
+          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="w-full md:w-auto relative z-10 shrink-0">
+            <Link 
+              href={`/decks/${lastStudiedDeck.id}`}
+              className="flex items-center justify-center gap-2 bg-[var(--color-gold)] text-white px-8 py-4 rounded-2xl font-bold text-base shadow-[0_6px_0_#b58428] active:shadow-none active:translate-y-1 hover:bg-[#e2af49] transition-all w-full md:w-auto"
+            >
+              Kontynuuj naukę
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* Motivational Stats Banner */}
       <motion.div 
         initial={{ opacity: 0, y: -15 }}

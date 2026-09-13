@@ -6,7 +6,8 @@ import { revalidatePath } from 'next/cache'
 export async function saveDeck(
   title: string,
   cards: { question: string; answer: string }[],
-  subject?: string
+  subject?: string,
+  sourceImageUrls?: string[]
 ) {
   const supabase = await createClient()
   
@@ -19,6 +20,7 @@ export async function saveDeck(
       title,
       subject: subject?.trim() || null,
       user_id: userData.user.id,
+      source_image_urls: sourceImageUrls || []
     })
     .select()
     .single()
