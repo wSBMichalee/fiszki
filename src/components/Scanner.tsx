@@ -109,6 +109,12 @@ export default function Scanner() {
 
         const filename = `pdf_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.pdf`
         
+        console.log('--- DIAGNOSTYKA UPLOADU ---')
+        console.log('Session istnieje:', !!session)
+        console.log('Access token:', session?.access_token ? 'Obecny (ukryty ze względów bezp.)' : 'Brak')
+        console.log('Path (nazwa pliku):', filename)
+        console.log('---------------------------')
+
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('deck-images')
           .upload(filename, pdfFileToUpload, {
