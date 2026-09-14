@@ -11,7 +11,7 @@ interface PreviewStepProps {
 }
 
 export default function PreviewStep({ photo, error, onBack, onParseImage }: PreviewStepProps) {
-  const isPdf = photo?.startsWith('data:application/pdf')
+  const isPdf = photo?.startsWith('data:application/pdf') || photo?.startsWith('pdf-file:')
 
   return (
     <motion.div 

@@ -29,6 +29,7 @@ export default function Scanner() {
   const [subject, setSubject] = useState('')
   const [topic, setTopic] = useState('')
   const [photo, setPhoto] = useState<string | null>(null)
+  const [pdfFileToUpload, setPdfFileToUpload] = useState<File | null>(null)
   const [textInput, setTextInput] = useState('')
   const [cards, setCards] = useState<Card[]>([])
   const [noteImages, setNoteImages] = useState<string[]>([])
@@ -77,13 +78,9 @@ export default function Scanner() {
       return
     }
 
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string
-      setPhoto(dataUrl)
-      navigateStep('preview')
-    }
-    reader.readAsDataURL(file)
+    setPhoto(`pdf-file:${file.name}`)
+    setPdfFileToUpload(file)
+    navigateStep('preview')
   }
 
   const parseImage = async () => {
@@ -97,10 +94,37 @@ export default function Scanner() {
     setError('')
     
     try {
+      let payload = {}
+      let finalPhoto = photo
+
+      if (pdfFileToUpload) {
+        const supabase = createClient()
+        const filename = `pdf_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.pdf`
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('deck-images')
+          .upload(filename, pdfFileToUpload, {
+            contentType: 'application/pdf'
+          })
+          
+        if (uploadError) {
+          throw new Error('Nie udało się wgrać pliku PDF do bazy: ' + uploadError.message)
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('deck-images')
+          .getPublicUrl(uploadData.path)
+
+        finalPhoto = publicUrlData.publicUrl
+        payload = { fileUrl: finalPhoto, subject: subject.trim(), topic: topic.trim() }
+      } else {
+        payload = { imageBase64: photo, subject: subject.trim(), topic: topic.trim() }
+      }
+
       const res = await fetch('/api/parse-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: photo, subject: subject.trim(), topic: topic.trim() })
+        body: JSON.stringify(payload)
       })
       
       if (!res.ok) {
@@ -117,7 +141,7 @@ export default function Scanner() {
       const data = await res.json()
       
       setCards((prev) => [...prev, ...data.cards])
-      setNoteImages((prev) => [...prev, photo]) // Save image for uploading later
+      setNoteImages((prev) => [...prev, finalPhoto]) // Save image for uploading later
       if (subject.trim() && title === 'Nowy zestaw fiszek') {
         setTitle(`Zestaw: ${subject.trim()}`)
       }
@@ -175,6 +199,11 @@ export default function Scanner() {
         const supabase = createClient()
         for (let i = 0; i < noteImages.length; i++) {
           try {
+            if (noteImages[i].startsWith('http')) {
+              uploadedUrls.push(noteImages[i])
+              continue
+            }
+            
             const base64Data = noteImages[i].split(',')[1]
             const mime = noteImages[i].split(',')[0].match(/:(.*?);/)?.[1] || 'image/jpeg'
             

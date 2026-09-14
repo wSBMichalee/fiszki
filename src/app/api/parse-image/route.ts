@@ -13,10 +13,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
     }
 
-    const { imageBase64, subject, topic } = await req.json()
+    const { imageBase64, fileUrl, subject, topic } = await req.json()
 
-    if (!imageBase64) {
-      return NextResponse.json({ error: 'Brak obrazu' }, { status: 400 })
+    if (!imageBase64 && !fileUrl) {
+      return NextResponse.json({ error: 'Brak obrazu lub pliku' }, { status: 400 })
     }
 
     let contextIntro = ''
@@ -32,16 +32,28 @@ export async function POST(req: Request) {
       : 'Przeanalizuj CAŁY ten dokument (zdjęcie lub plik PDF, wszystkie strony bez pomijania żadnej z nich) i wyciągnij z niego wszystkie logiczne pary pytanie-odpowiedź do nauki w formie fiszek. Zwróć WYŁĄCZNIE czysty JSON w formacie: [{"question": "...", "answer": "..."}, ...]. Nie dodawaj żadnego dodatkowego tekstu ani bloków markdown, zwracasz sam JSON.'
 
     let mimeType = 'image/jpeg'
-    let base64Data = imageBase64
-    if (imageBase64.includes(',')) {
-      const parts = imageBase64.split(',')
-      base64Data = parts[1]
-      // Wzorzec data:[<mediatype>][;base64],
-      // Bezpieczniejsze wyciąganie mimeType bez rygorystycznego regexu
-      const meta = parts[0].replace('data:', '')
-      const mime = meta.split(';')[0]
-      if (mime) {
-        mimeType = mime
+    let base64Data = ''
+
+    if (fileUrl) {
+      // Pobieranie pliku z URL (np. Supabase Storage) i konwersja do Base64
+      const fileRes = await fetch(fileUrl)
+      if (!fileRes.ok) throw new Error('Nie udało się pobrać pliku źródłowego z Storage')
+      
+      const arrayBuffer = await fileRes.arrayBuffer()
+      base64Data = Buffer.from(arrayBuffer).toString('base64')
+      mimeType = fileRes.headers.get('content-type') || 'application/pdf'
+    } else if (imageBase64) {
+      base64Data = imageBase64
+      if (imageBase64.includes(',')) {
+        const parts = imageBase64.split(',')
+        base64Data = parts[1]
+        // Wzorzec data:[<mediatype>][;base64],
+        // Bezpieczniejsze wyciąganie mimeType bez rygorystycznego regexu
+        const meta = parts[0].replace('data:', '')
+        const mime = meta.split(';')[0]
+        if (mime) {
+          mimeType = mime
+        }
       }
     }
     
