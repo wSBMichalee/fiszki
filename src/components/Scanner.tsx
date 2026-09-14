@@ -220,7 +220,13 @@ export default function Scanner() {
         {step === 'method' && (
           <MethodStep 
             subject={subject} 
-            onBack={() => navigateStep('subject')} 
+            onBack={() => {
+              if (cards.length > 0) {
+                navigateStep('edit')
+              } else {
+                navigateStep('subject')
+              }
+            }} 
             onSelectCamera={() => navigateStep('camera')} 
             onSelectText={() => navigateStep('text')} 
             onFileUpload={handleFileUpload} 
