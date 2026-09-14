@@ -105,11 +105,11 @@ export default function Scanner() {
           const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true })
           const pageCount = pdfDoc.getPageCount()
           
-          if (pageCount > 50) {
-            throw new Error('Dokumenty powyżej 50 stron nie są jeszcze w pełni wspierane - pracujemy nad tym. Spróbuj podzielić notatki na mniejsze pliki.')
+          if (pageCount > 150) {
+            throw new Error('Dokumenty powyżej 150 stron nie są jeszcze w pełni wspierane - pracujemy nad tym. Spróbuj podzielić notatki na mniejsze pliki.')
           }
         } catch (err) {
-          if (err instanceof Error && err.message.includes('50 stron')) {
+          if (err instanceof Error && err.message.includes('150 stron')) {
             throw err // Przekaż nasz własny błąd
           }
           console.error('Błąd weryfikacji PDF:', err)

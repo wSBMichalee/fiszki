@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
-export const maxDuration = 60 // Zwiększenie limitu czasu wykonywania na Vercelu do 60 sekund
+export const maxDuration = 280 // Bezpieczny margines przed twardym limitem 300s na planie Pro
 
 export async function POST(req: Request) {
   try {
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     }
     
     let response
-    const maxAttempts = 4
+    const maxAttempts = 2
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         response = await ai.models.generateContent({
@@ -91,9 +91,8 @@ export async function POST(req: Request) {
         const isTransientError = error?.status === 503 || error?.code === 503 || error?.status === 429
         
         if (attempt < maxAttempts && isTransientError) {
-          const delay = Math.pow(2, attempt - 1) * 1000 // 1000ms, 2000ms, 4000ms
-          console.warn(`Gemini 503/429 spike, retrying in ${delay}ms (attempt ${attempt}/${maxAttempts})...`)
-          await new Promise(res => setTimeout(res, delay))
+          console.warn(`Gemini 503/429 spike, retrying in 2000ms (attempt ${attempt}/${maxAttempts})...`)
+          await new Promise(res => setTimeout(res, 2000))
           continue
         }
         
