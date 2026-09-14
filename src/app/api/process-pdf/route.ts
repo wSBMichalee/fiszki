@@ -41,7 +41,8 @@ export async function POST(req: Request) {
     const deckId = deckData.id
 
     // 2. Wyemituj zdarzenie do Inngesta, by rozpoczął pracę w tle
-    await inngest.send({
+    console.log('[process-pdf] Wywołuję inngest.send dla deckId:', deckId)
+    const inngestResult = await inngest.send({
       name: 'notes/process.requested',
       data: {
         deckId,
@@ -50,6 +51,7 @@ export async function POST(req: Request) {
         userId: userData.user.id
       }
     })
+    console.log('[process-pdf] inngest.send zakończony. Wynik:', JSON.stringify(inngestResult))
 
     // 3. Zwróć natychmiast ID talii do klienta
     return NextResponse.json({ deckId, status: 'processing' })
