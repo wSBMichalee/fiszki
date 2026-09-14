@@ -27,7 +27,7 @@ type DefenseResult = {
   isTextFallback?: boolean
 }
 
-type Step = 'intro' | 'question' | 'recording' | 'evaluating' | 'summary'
+type Step = 'intro' | 'shuffling' | 'question' | 'recording' | 'evaluating' | 'summary'
 
 export default function StudyModeDefense({
   cards,
@@ -118,6 +118,10 @@ export default function StudyModeDefense({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const startExam = () => {
+    setStep('shuffling')
+  }
 
   const startQuestion = () => {
     setStep('question')
@@ -244,7 +248,7 @@ export default function StudyModeDefense({
             Twoim zadaniem będzie odpowiedzieć na nie <strong>na głos</strong>. 
             Sztuczna Inteligencja przeanalizuje Twoją odpowiedź pod kątem merytorycznym i płynności.
           </p>
-          <Button onClick={startQuestion} className="w-full" size="lg">
+          <Button onClick={startExam} className="w-full" size="lg">
             Rozpocznij egzamin
           </Button>
           <button onClick={() => onSwitchMode('standard')} className="mt-4 text-xs font-medium text-gray-400 hover:text-gray-600">
@@ -365,7 +369,12 @@ export default function StudyModeDefense({
         {/* Content */}
         <div className="flex-1 p-6 sm:p-10 flex flex-col items-center justify-center relative">
           
-          {step === 'evaluating' ? (
+          {step === 'shuffling' ? (
+            <ShufflingAnimation 
+              onComplete={startQuestion} 
+              onSkip={startQuestion} 
+            />
+          ) : step === 'evaluating' ? (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -452,3 +461,96 @@ export default function StudyModeDefense({
     </div>
   )
 }
+
+function ShufflingAnimation({ onComplete, onSkip }: { onComplete: () => void, onSkip: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onComplete()
+    }, 2200)
+    return () => clearTimeout(timer)
+  }, [onComplete])
+
+  const [cards] = useState(() => {
+    return Array.from({ length: 7 }).map((_, i) => ({
+      id: i,
+      x1: (Math.random() - 0.5) * 120,
+      x2: (Math.random() - 0.5) * 60,
+      y1: (Math.random() - 0.5) * 80,
+      y2: (Math.random() - 0.5) * 40,
+      r1: (Math.random() - 0.5) * 90,
+      r2: (Math.random() - 0.5) * 45,
+      z: Math.floor(Math.random() * 10)
+    }))
+  })
+
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center relative w-full h-full min-h-[250px]">
+      <div className="relative w-24 h-32 sm:w-32 sm:h-44">
+        {cards.map((card) => {
+          const isFinalThree = card.id >= 4;
+          const finalIndex = card.id - 4; // 0, 1, 2
+          return (
+            <motion.div
+              key={card.id}
+              initial={{ 
+                x: 0, 
+                y: 0, 
+                rotate: 0, 
+                opacity: 0,
+                scale: 0.8
+              }}
+              animate={{
+                x: [
+                  0, 
+                  card.x1,
+                  card.x2,
+                  isFinalThree ? (finalIndex - 1) * 20 : 0
+                ],
+                y: [
+                  0, 
+                  card.y1,
+                  card.y2,
+                  isFinalThree ? (finalIndex * 4) : 0
+                ],
+                rotate: [
+                  0, 
+                  card.r1,
+                  card.r2,
+                  isFinalThree ? (finalIndex - 1) * 8 : 0
+                ],
+                opacity: [
+                  0, 
+                  1, 
+                  1, 
+                  isFinalThree ? 1 : 0
+                ],
+                scale: [0.8, 1.1, 1, 1],
+                zIndex: [card.id, card.z, isFinalThree ? 10 + card.id : card.id],
+              }}
+              transition={{
+                duration: 2.0,
+                times: [0, 0.4, 0.7, 1],
+                ease: "easeInOut",
+              }}
+              className="absolute top-0 left-0 w-full h-full bg-[#fdfdfc] border-2 border-[var(--color-navy)] rounded-xl shadow-md flex items-center justify-center overflow-hidden"
+            >
+              <div className="w-full h-full flex flex-col gap-2 p-3 opacity-20">
+                <div className="w-full h-2 bg-[var(--color-navy)] rounded-full w-3/4"></div>
+                <div className="w-full h-2 bg-[var(--color-navy)] rounded-full w-1/2"></div>
+                <div className="w-full h-2 bg-[var(--color-navy)] rounded-full w-5/6"></div>
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+      
+      <button 
+        onClick={onSkip}
+        className="absolute bottom-[-20px] right-0 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors z-20"
+      >
+        Pomiń
+      </button>
+    </div>
+  )
+}
+
