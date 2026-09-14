@@ -7,23 +7,23 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
   const { id } = await params
   const supabase = await createClient()
   
-  const { data: deck, error: deckError } = await supabase
-    .from('decks')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const [deckResult, cardsResult] = await Promise.all([
+    supabase
+      .from('decks')
+      .select('*')
+      .eq('id', id)
+      .single(),
+    supabase
+      .from('cards')
+      .select('*')
+      .eq('deck_id', id)
+      .order('created_at', { ascending: true })
+  ])
 
-  if (deckError || !deck) {
-    notFound()
-  }
+  const { data: deck, error: deckError } = deckResult
+  const { data: cards, error: cardsError } = cardsResult
 
-  const { data: cards, error: cardsError } = await supabase
-    .from('cards')
-    .select('*')
-    .eq('deck_id', id)
-    .order('created_at', { ascending: true })
-
-  if (cardsError || !cards) {
+  if (deckError || !deck || cardsError || !cards) {
     notFound()
   }
 

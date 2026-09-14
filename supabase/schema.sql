@@ -87,3 +87,6 @@ create policy "Użytkownicy mogą usuwać karty ze swoich zestawów"
       and public.decks.user_id = auth.uid()
     )
   );
+
+-- Indeks dla zapytań o karty z danego zestawu (uniknięcie seq scan)
+CREATE INDEX IF NOT EXISTS idx_cards_deck_id ON public.cards(deck_id);
