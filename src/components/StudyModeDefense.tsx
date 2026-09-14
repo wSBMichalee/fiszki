@@ -24,6 +24,7 @@ type DefenseResult = {
   missingElements: string | null
   justification: string
   confidence: 'Wysoka' | 'Średnia' | 'Niska'
+  isTextFallback?: boolean
 }
 
 type Step = 'intro' | 'question' | 'recording' | 'evaluating' | 'summary'
@@ -139,8 +140,7 @@ export default function StudyModeDefense({
   
   const useFallbackMode = () => {
     setShowFallback(true)
-    setStep('recording')
-    startedSpeakingAt.current = Date.now()
+    // keep step as 'question' to show textarea
   }
 
   const stopRecordingAndEvaluate = async () => {
@@ -188,7 +188,8 @@ export default function StudyModeDefense({
         isSufficient: data.isSufficient ?? false,
         missingElements: data.missingElements || null,
         justification: data.justification || 'Brak oceny',
-        confidence
+        confidence,
+        isTextFallback: showFallback
       }
       
       setResults(prev => [...prev, newResult])
@@ -212,7 +213,8 @@ export default function StudyModeDefense({
         isSufficient: false,
         missingElements: 'Wystąpił błąd podczas połączenia z AI.',
         justification: 'Błąd',
-        confidence: 'Niska'
+        confidence: 'Niska',
+        isTextFallback: showFallback
       }])
       
       if (currentIndex < defenseCards.length - 1) {
@@ -298,7 +300,7 @@ export default function StudyModeDefense({
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  <div className="bg-white border border-gray-200 rounded-xl p-3">
+                  <div className={`bg-white border border-gray-200 rounded-xl p-3 ${res.isTextFallback ? 'col-span-1 sm:col-span-2' : ''}`}>
                     <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">Ocena AI</div>
                     <p className="text-sm text-[var(--color-navy)]">{res.justification}</p>
                     {res.missingElements && (
@@ -306,16 +308,18 @@ export default function StudyModeDefense({
                     )}
                   </div>
                   
-                  <div className="bg-white border border-gray-200 rounded-xl p-3 flex flex-col justify-center">
-                    <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">Wskaźnik Pewności*</div>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${res.confidence === 'Wysoka' ? 'bg-emerald-500' : res.confidence === 'Średnia' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
-                      <span className="text-sm font-semibold text-[var(--color-navy)]">{res.confidence}</span>
+                  {!res.isTextFallback && (
+                    <div className="bg-white border border-gray-200 rounded-xl p-3 flex flex-col justify-center">
+                      <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">Wskaźnik Pewności*</div>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${res.confidence === 'Wysoka' ? 'bg-emerald-500' : res.confidence === 'Średnia' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                        <span className="text-sm font-semibold text-[var(--color-navy)]">{res.confidence}</span>
+                      </div>
+                      <div className="text-[10px] text-gray-400 mt-2 leading-tight">
+                        * Szacunek oparty na tempie i płynności (nie jest to pomiar medyczny ani psychologiczny).
+                      </div>
                     </div>
-                    <div className="text-[10px] text-gray-400 mt-2 leading-tight">
-                      * Szacunek oparty na tempie i płynności (nie jest to pomiar medyczny ani psychologiczny).
-                    </div>
-                  </div>
+                  )}
                 </div>
                 
               </motion.div>
