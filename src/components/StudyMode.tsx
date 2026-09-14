@@ -130,6 +130,13 @@ export default function StudyMode({
   // Shared state for Standard and Exam modes
   const [sharedCards, setSharedCards] = useState<Card[]>(() => getWeightedShuffle(initialCards))
   const [sharedIndex, setSharedIndex] = useState(0)
+  
+  const [isSessionFinished, setIsSessionFinished] = useState(false)
+  
+  const handleSwitchMode = (mode: StudyType) => {
+    setStudyType(mode)
+    setIsSessionFinished(false)
+  }
 
   const [pomodoroEnabled, setPomodoroEnabled] = useState(false)
   const [studyTimeMinutes, setStudyTimeMinutes] = useState(25)
@@ -194,9 +201,9 @@ export default function StudyMode({
                   checked={studyGoal === goal.id}
                   onChange={() => {
                     setStudyGoal(goal.id as StudyGoal)
-                    if (goal.id === 'oral') setStudyType('defense')
-                    else if (goal.id === 'written') setStudyType('exam')
-                    else setStudyType('standard')
+                    if (goal.id === 'oral') handleSwitchMode('defense')
+                    else if (goal.id === 'written') handleSwitchMode('exam')
+                    else handleSwitchMode('standard')
                   }}
                   className="w-4 h-4 text-[var(--color-gold)] focus:ring-[var(--color-gold)]"
                 />
@@ -212,13 +219,13 @@ export default function StudyMode({
             <h3 className="font-semibold text-[var(--color-navy)] text-sm uppercase tracking-wider">Wybierz tryb</h3>
             <div className="flex gap-2">
               <button 
-                onClick={() => setStudyType('standard')}
+                onClick={() => handleSwitchMode('standard')}
                 className={`flex-1 py-3 rounded-xl border-2 transition-all font-medium text-sm ${studyType === 'standard' ? 'border-[var(--color-navy)] bg-[var(--color-navy)] text-white' : 'border-gray-100 text-[var(--color-graphite)] hover:border-gray-200'}`}
               >
                 Przeglądanie
               </button>
               <button 
-                onClick={() => setStudyType('exam')}
+                onClick={() => handleSwitchMode('exam')}
                 className={`flex-1 py-3 rounded-xl border-2 transition-all font-medium text-sm ${studyType === 'exam' ? 'border-[var(--color-navy)] bg-[var(--color-navy)] text-white' : 'border-gray-100 text-[var(--color-graphite)] hover:border-gray-200'}`}
               >
                 Losowanie
@@ -300,9 +307,10 @@ export default function StudyMode({
         <StudyModeDefense
           deckId={deckId}
           cards={cards}
-          onSwitchMode={setStudyType}
+          onSwitchMode={handleSwitchMode}
           currentMode={studyType}
           studyGoal={studyGoal}
+          onFinish={() => setIsSessionFinished(true)}
         />
       ) : studyType === 'exam' ? (
         <StudyModeExam
@@ -312,9 +320,11 @@ export default function StudyMode({
           setCards={setSharedCards}
           setCurrentIndex={setSharedIndex}
           onCardLearned={handleCardLearned}
-          onSwitchMode={setStudyType}
+          onSwitchMode={handleSwitchMode}
           currentMode={studyType}
           studyGoal={studyGoal}
+          onFinish={() => setIsSessionFinished(true)}
+          onRestart={() => setIsSessionFinished(false)}
         />
       ) : (
         <StudyModeStandard
@@ -322,13 +332,13 @@ export default function StudyMode({
           cards={sharedCards}
           currentIndex={sharedIndex}
           setCurrentIndex={setSharedIndex}
-          onSwitchMode={setStudyType}
+          onSwitchMode={handleSwitchMode}
           currentMode={studyType}
           studyGoal={studyGoal}
         />
       )}
       
-      {pomodoroEnabled && studyState === 'studying' && (
+      {pomodoroEnabled && studyState === 'studying' && !isSessionFinished && (
         <PomodoroOverlay key="overlay" initialTime={studyTimeMinutes * 60} onTimeUp={() => setStudyState('break')} />
       )}
       

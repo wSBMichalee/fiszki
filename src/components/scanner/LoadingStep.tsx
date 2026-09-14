@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { RefreshCcw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 
 export default function LoadingStep() {
   return (
@@ -17,7 +17,7 @@ export default function LoadingStep() {
         transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
         className="mb-8"
       >
-        <RefreshCcw className="w-12 h-12 text-[var(--color-gold)]" />
+        <RefreshCw className="w-12 h-12 text-[var(--color-gold)]" />
       </motion.div>
       
       <motion.div

@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion, Variants } from "framer-motion";
-import { Sparkles, CheckCircle2, Layers, Flame, ArrowRight } from "lucide-react";
+import { motion, Variants, AnimatePresence } from "framer-motion";
+import { Sparkles, CheckCircle2, Layers, Flame, ArrowRight, Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { deleteDeck } from "../decks/new/actions";
 
 type Deck = {
   id: string;
@@ -26,6 +28,23 @@ export default function DashboardGrid({
   stats?: Stats;
   lastStudiedDeck?: Deck | null;
 }) {
+  const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!deckToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteDeck(deckToDelete.id);
+      setDeckToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete deck:", error);
+      alert("Wystąpił błąd podczas usuwania zestawu.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const container: Variants = {
     hidden: { opacity: 0 },
     show: {
@@ -216,14 +235,72 @@ export default function DashboardGrid({
                   )}
                 </div>
 
-                <h3 className="font-serif font-bold text-base sm:text-lg md:text-xl text-[var(--color-navy)] leading-snug group-hover:text-[var(--color-gold)] transition-colors duration-200 line-clamp-3 relative z-10">
+                <h3 className="font-serif font-bold text-base sm:text-lg md:text-xl text-[var(--color-navy)] leading-snug group-hover:text-[var(--color-gold)] transition-colors duration-200 line-clamp-3 relative z-10 pr-8">
                   {deck.title}
                 </h3>
               </motion.div>
             </Link>
+            
+            {/* Przycisk usuwania - nałożony na kartę */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                setDeckToDelete(deck);
+              }}
+              className="absolute top-5 right-5 sm:top-6 sm:right-6 z-20 p-2 sm:p-2.5 rounded-full bg-white/90 border border-gray-100 shadow-sm text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all opacity-100 sm:opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-95"
+              title="Usuń zestaw"
+            >
+              <Trash2 size={16} />
+            </button>
           </motion.div>
         ))}
       </motion.div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deckToDelete && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-gray-100"
+            >
+              <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-red-500 mb-5 mx-auto">
+                <AlertTriangle size={28} />
+              </div>
+              <h3 className="text-xl font-serif font-bold text-[var(--color-navy)] text-center mb-2">
+                Usunąć zestaw?
+              </h3>
+              <p className="text-[var(--color-graphite)] text-sm text-center mb-6">
+                Czy na pewno chcesz usunąć zestaw <strong>&quot;{deckToDelete.title}&quot;</strong>? Ta operacja jest nieodwracalna i trwale usunie wszystkie fiszki w tym zestawie.
+              </p>
+              
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setDeckToDelete(null)}
+                  disabled={isDeleting}
+                  className="flex-1 py-3 rounded-xl font-medium text-[var(--color-graphite)] bg-gray-50 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  Anuluj
+                </button>
+                <button 
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex-1 py-3 rounded-xl font-medium text-white bg-red-500 hover:bg-red-600 shadow-[0_4px_14px_rgba(239,68,68,0.3)] transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? <Loader2 size={18} className="animate-spin" /> : "Usuń bezpowrotnie"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

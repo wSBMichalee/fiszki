@@ -32,12 +32,14 @@ export default function StudyModeDefense({
   cards,
   onSwitchMode,
   currentMode,
+  onFinish
 }: {
   deckId: string
   cards: Card[]
   onSwitchMode: (mode: 'standard' | 'exam' | 'defense') => void
   currentMode: 'standard' | 'exam' | 'defense'
   studyGoal: string
+  onFinish?: () => void
 }) {
   const [defenseCards] = useState<Card[]>(() => {
     const shuffled = [...cards].sort(() => 0.5 - Math.random())
@@ -196,6 +198,7 @@ export default function StudyModeDefense({
         startQuestion()
       } else {
         setStep('summary')
+        onFinish?.()
       }
       
     } catch (err) {
@@ -217,6 +220,7 @@ export default function StudyModeDefense({
         startQuestion()
       } else {
         setStep('summary')
+        onFinish?.()
       }
     }
   }

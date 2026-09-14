@@ -17,6 +17,8 @@ interface StudyModeExamProps {
   onSwitchMode: (mode: 'standard' | 'exam' | 'defense') => void
   currentMode: 'standard' | 'exam' | 'defense'
   studyGoal?: StudyGoal
+  onFinish?: () => void
+  onRestart?: () => void
 }
 
 export default function StudyModeExam({
@@ -27,7 +29,9 @@ export default function StudyModeExam({
   onCardLearned,
   onSwitchMode,
   currentMode,
-  studyGoal = 'other'
+  studyGoal = 'other',
+  onFinish,
+  onRestart
 }: StudyModeExamProps) {
   const [isFlipped, setIsFlipped] = useState(false)
   const [isFinished, setIsFinished] = useState(false)
@@ -59,6 +63,7 @@ export default function StudyModeExam({
       setDirection(null)
     } else {
       setIsFinished(true)
+      onFinish?.()
     }
   }
 
@@ -70,6 +75,7 @@ export default function StudyModeExam({
     setIsFlipped(false)
     setIsFinished(false)
     setDirection(null)
+    onRestart?.()
   }
 
   const learnedCount = cards.filter((c) => c.learned).length
