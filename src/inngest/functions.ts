@@ -2,6 +2,7 @@ import { inngest } from './client'
 import { GoogleGenAI } from '@google/genai'
 import { createClient } from '@supabase/supabase-js'
 import { generateCardsFromGemini } from '@/lib/gemini-helpers'
+import { NonRetriableError } from 'inngest'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
@@ -9,6 +10,7 @@ export const processNotesJob = inngest.createFunction(
   { 
     id: 'process-notes-job', 
     retries: 3,
+    triggers: [{ event: 'notes/process.requested' }],
     onFailure: async ({ event, error, step }) => {
       // Inngest przekazuje oryginalne zdarzenie w event.data.event
       const originalEvent = event.data.event
@@ -31,7 +33,6 @@ export const processNotesJob = inngest.createFunction(
       })
     }
   },
-  { event: 'notes/process.requested' },
   async ({ event, step }) => {
     const { deckId, fileUrl, imageBase64, promptText, userId } = event.data
 
