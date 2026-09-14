@@ -298,20 +298,20 @@ export default function StudyModeExam({
             }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
             style={{ transformStyle: is3D ? "preserve-3d" : "flat" }}
-            className="w-full min-h-[400px] grid col-start-1 row-start-1 cursor-pointer"
+            className="w-full h-[60vh] min-h-[400px] max-h-[600px] grid col-start-1 row-start-1 cursor-pointer"
             onClick={() => setIsFlipped(!isFlipped)}
           >
             {/* Front */}
             <div 
-              className="col-start-1 row-start-1 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border border-gray-200/90 flex flex-col items-center p-6 sm:p-8 pt-16 pb-16 text-center select-none"
+              className="col-start-1 row-start-1 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border border-gray-200/90 flex flex-col items-center p-6 sm:p-8 pt-16 pb-16 text-center select-none overflow-hidden"
               style={!is3D ? { opacity: isFlipped ? 0 : 1, transition: 'opacity 0.2s', zIndex: isFlipped ? 0 : 1 } : { zIndex: isFlipped ? 0 : 1 }}
             >
               <span className="absolute top-6 text-xs font-bold uppercase tracking-widest text-[var(--color-navy)]/35">
                 Pytanie egzaminacyjne
               </span>
               
-              <div className="flex-1 flex flex-col justify-center items-center w-full min-h-0">
-                <h3 className={`font-serif font-bold text-[var(--color-navy)] leading-snug tracking-tight ${currentCard.question.length > 120 ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl md:text-3xl'}`}>
+              <div className="flex-1 flex flex-col justify-center items-center w-full min-h-0 overflow-y-auto custom-scrollbar py-2">
+                <h3 className={`font-serif font-bold text-[var(--color-navy)] leading-snug tracking-tight whitespace-pre-line w-full ${currentCard.question.length > 120 ? 'text-left text-lg sm:text-xl' : 'text-center text-xl sm:text-2xl md:text-3xl'}`}>
                   {currentCard.question}
                 </h3>
               </div>
@@ -323,7 +323,7 @@ export default function StudyModeExam({
             
             {/* Back */}
             <div 
-              className="col-start-1 row-start-1 backface-hidden bg-white rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border-2 border-[var(--color-gold)] flex flex-col items-center p-6 sm:p-8 pt-16 pb-16 text-center select-none"
+              className="col-start-1 row-start-1 backface-hidden bg-white rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border-2 border-[var(--color-gold)] flex flex-col items-center p-6 sm:p-8 pt-16 pb-16 text-center select-none overflow-hidden"
               style={
                 is3D 
                   ? { transform: "rotateY(180deg)", zIndex: isFlipped ? 1 : 0 } 
@@ -334,8 +334,8 @@ export default function StudyModeExam({
                 Odpowiedź
               </span>
               
-              <div className="flex-1 flex flex-col justify-center items-center w-full min-h-0">
-                <p className={`font-serif font-semibold text-[var(--color-navy)] leading-snug tracking-tight ${currentCard.answer.length > 120 ? 'text-base sm:text-lg' : 'text-lg sm:text-xl md:text-2xl'}`}>
+              <div className="flex-1 flex flex-col justify-center items-center w-full min-h-0 overflow-y-auto custom-scrollbar py-2">
+                <p className={`font-serif font-semibold text-[var(--color-navy)] leading-snug tracking-tight whitespace-pre-line w-full ${currentCard.answer.length > 120 ? 'text-left text-base sm:text-lg' : 'text-center text-lg sm:text-xl md:text-2xl'}`}>
                   {currentCard.answer}
                 </p>
               </div>

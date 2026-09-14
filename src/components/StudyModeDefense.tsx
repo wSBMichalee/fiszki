@@ -342,9 +342,9 @@ export default function StudyModeDefense({
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col min-h-[400px]">
+      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col h-[60vh] min-h-[400px] max-h-[600px]">
         {/* Header progress */}
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center shrink-0">
           <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
             Pytanie {currentIndex + 1} z {defenseCards.length}
           </span>
@@ -367,7 +367,7 @@ export default function StudyModeDefense({
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-6 sm:p-10 flex flex-col items-center justify-center relative">
+        <div className="flex-1 p-6 sm:p-10 flex flex-col items-center justify-center relative overflow-y-auto custom-scrollbar">
           
           {step === 'shuffling' ? (
             <ShufflingAnimation 
@@ -391,9 +391,9 @@ export default function StudyModeDefense({
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="w-full flex flex-col items-center"
+                className="w-full flex flex-col items-center min-h-full py-4"
               >
-                <h2 className={`font-serif text-[var(--color-navy)] font-bold text-center mb-10 leading-snug ${defenseCards[currentIndex]?.question.length > 120 ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'}`}>
+                <h2 className={`font-serif text-[var(--color-navy)] font-bold mb-10 leading-snug whitespace-pre-line w-full ${defenseCards[currentIndex]?.question.length > 120 ? 'text-left text-xl sm:text-2xl' : 'text-center text-2xl sm:text-3xl'}`}>
                   {defenseCards[currentIndex]?.question}
                 </h2>
 
