@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { saveDeck } from '@/app/decks/new/actions'
 import { AnimatePresence } from 'framer-motion'
 import { createClient } from '@/utils/supabase/client'
+import { PDFDocument } from 'pdf-lib'
 import { Card, Step } from './scanner/types'
 
 import SubjectStep from './scanner/SubjectStep'
@@ -98,6 +99,24 @@ export default function Scanner() {
       let finalPhoto = photo
 
       if (pdfFileToUpload) {
+        // --- ZABEZPIECZENIE TYMCZASOWE ---
+        try {
+          const arrayBuffer = await pdfFileToUpload.arrayBuffer()
+          const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true })
+          const pageCount = pdfDoc.getPageCount()
+          
+          if (pageCount > 50) {
+            throw new Error('Dokumenty powyżej 50 stron nie są jeszcze w pełni wspierane - pracujemy nad tym. Spróbuj podzielić notatki na mniejsze pliki.')
+          }
+        } catch (err) {
+          if (err instanceof Error && err.message.includes('50 stron')) {
+            throw err // Przekaż nasz własny błąd
+          }
+          console.error('Błąd weryfikacji PDF:', err)
+          // Ignoruj inne błędy parsowania (pozwól przejść dalej), żeby nie psuć zdrowych plików
+        }
+        // ---------------------------------
+
         const supabase = createClient()
         
         // WYMUSZENIE załadowania sesji przez klienta przed próbą zapisu,
