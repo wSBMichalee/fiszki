@@ -19,19 +19,25 @@ export type Card = {
 type StudyType = 'standard' | 'exam' | 'defense'
 type StudyState = 'setup' | 'studying' | 'break'
 
-function PomodoroOverlay({ initialTime, onTimeUp }: { initialTime: number, onTimeUp: () => void }) {
-  const [timeLeft, setTimeLeft] = useState(initialTime)
+function PomodoroOverlay({ initialTime, startedAt, onTimeUp }: { initialTime: number, startedAt: number, onTimeUp: () => void }) {
+  const [timeLeft, setTimeLeft] = useState(() => Math.max(0, initialTime - Math.floor((Date.now() - startedAt) / 1000)))
 
   useEffect(() => {
-    if (timeLeft <= 0) {
-      onTimeUp()
-      return
+    const checkTime = () => {
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000)
+      const remaining = initialTime - elapsed
+      if (remaining <= 0) {
+        onTimeUp()
+        return false
+      }
+      setTimeLeft(remaining)
+      return true
     }
-    const timer = setInterval(() => {
-      setTimeLeft(t => t - 1)
-    }, 1000)
+    
+    if (!checkTime()) return
+    const timer = setInterval(checkTime, 1000)
     return () => clearInterval(timer)
-  }, [timeLeft, onTimeUp])
+  }, [initialTime, startedAt, onTimeUp])
 
   const mins = Math.floor(timeLeft / 60)
   const secs = timeLeft % 60
@@ -50,19 +56,26 @@ function PomodoroOverlay({ initialTime, onTimeUp }: { initialTime: number, onTim
   )
 }
 
-function StudyBreakScreen({ breakTimeMinutes, onEndBreak }: { breakTimeMinutes: number, onEndBreak: () => void }) {
-  const [timeLeft, setTimeLeft] = useState(breakTimeMinutes * 60)
+function StudyBreakScreen({ breakTimeMinutes, startedAt, onEndBreak }: { breakTimeMinutes: number, startedAt: number, onEndBreak: () => void }) {
+  const initialTime = breakTimeMinutes * 60
+  const [timeLeft, setTimeLeft] = useState(() => Math.max(0, initialTime - Math.floor((Date.now() - startedAt) / 1000)))
 
   useEffect(() => {
-    if (timeLeft <= 0) {
-      onEndBreak()
-      return
+    const checkTime = () => {
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000)
+      const remaining = initialTime - elapsed
+      if (remaining <= 0) {
+        onEndBreak()
+        return false
+      }
+      setTimeLeft(remaining)
+      return true
     }
-    const timer = setInterval(() => {
-      setTimeLeft(t => t - 1)
-    }, 1000)
+    
+    if (!checkTime()) return
+    const timer = setInterval(checkTime, 1000)
     return () => clearInterval(timer)
-  }, [timeLeft, onEndBreak])
+  }, [initialTime, startedAt, onEndBreak])
 
   const mins = Math.floor(timeLeft / 60)
   const secs = timeLeft % 60
@@ -122,12 +135,89 @@ export default function StudyMode({
   deckId: string
   initialCards: Card[]
 }) {
-  const [studyState, setStudyState] = useState<StudyState>('setup')
-  const [studyType, setStudyType] = useState<StudyType>('standard')
+  const [studyState, setStudyState] = useState<StudyState>(() => {
+    if (typeof window !== 'undefined') {
+      const sessionStr = sessionStorage.getItem(`active_session_${deckId}`)
+      if (sessionStr) {
+        try {
+          const session = JSON.parse(sessionStr)
+          const elapsed = Math.floor((Date.now() - session.startedAt) / 1000)
+          if (elapsed < session.maxDuration) {
+            return session.phase
+          } else {
+            sessionStorage.removeItem(`active_session_${deckId}`)
+          }
+        } catch (e) {}
+      }
+    }
+    return 'setup'
+  })
+  
+  const [studyType, setStudyType] = useState<StudyType>(() => {
+    if (typeof window !== 'undefined') {
+      const sessionStr = sessionStorage.getItem(`active_session_${deckId}`)
+      if (sessionStr) {
+        try {
+          const session = JSON.parse(sessionStr)
+          const elapsed = Math.floor((Date.now() - session.startedAt) / 1000)
+          if (elapsed < session.maxDuration) {
+            return session.mode
+          }
+        } catch (e) {}
+      }
+    }
+    return 'standard'
+  })
+  
+  const [sessionStartedAt, setSessionStartedAt] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const sessionStr = sessionStorage.getItem(`active_session_${deckId}`)
+      if (sessionStr) {
+        try {
+          const session = JSON.parse(sessionStr)
+          const elapsed = Math.floor((Date.now() - session.startedAt) / 1000)
+          if (elapsed < session.maxDuration) {
+            return session.startedAt
+          }
+        } catch (e) {}
+      }
+    }
+    return Date.now()
+  })
 
-  const navigateStudy = (newPhase: StudyState, newMode: StudyType) => {
+  const navigateStudy = (newPhase: StudyState, newMode: StudyType, overrideDuration?: number) => {
     setStudyState(newPhase)
     setStudyType(newMode)
+    
+    if (newPhase === 'setup') {
+      sessionStorage.removeItem(`active_session_${deckId}`)
+    } else {
+      let startedAt = Date.now()
+      let maxDuration = overrideDuration !== undefined ? overrideDuration : Number.MAX_SAFE_INTEGER
+
+      // Jeśli zmieniamy tylko tryb (np. z standard na exam) w trakcie tej samej fazy (nauka/przerwa), 
+      // i nie podaliśmy nowego limitu czasu, chcemy zachować istniejący zegar.
+      if (overrideDuration === undefined && typeof window !== 'undefined') {
+        const existingStr = sessionStorage.getItem(`active_session_${deckId}`)
+        if (existingStr) {
+          try {
+            const existing = JSON.parse(existingStr)
+            if (existing.phase === newPhase) {
+              startedAt = existing.startedAt
+              maxDuration = existing.maxDuration
+            }
+          } catch (e) {}
+        }
+      }
+
+      setSessionStartedAt(startedAt)
+      sessionStorage.setItem(`active_session_${deckId}`, JSON.stringify({
+        phase: newPhase,
+        mode: newMode,
+        startedAt: startedAt,
+        maxDuration: maxDuration
+      }))
+    }
   }
 
   const [cards, setCards] = useState<Card[]>(initialCards)
@@ -182,7 +272,7 @@ export default function StudyMode({
   }
 
   const startStudying = async () => {
-    navigateStudy('studying', studyType)
+    navigateStudy('studying', studyType, pomodoroEnabled ? studyTimeMinutes * 60 : Number.MAX_SAFE_INTEGER)
     supabase.from('decks').update({ last_studied_at: new Date().toISOString() }).eq('id', deckId).then()
   }
 
@@ -346,12 +436,12 @@ export default function StudyMode({
         )}
       
       {studyGoal !== 'oral' && pomodoroEnabled && studyState === 'studying' && !isSessionFinished && (
-        <PomodoroOverlay key="overlay" initialTime={studyTimeMinutes * 60} onTimeUp={() => navigateStudy('break', studyType)} />
+        <PomodoroOverlay key="overlay" initialTime={studyTimeMinutes * 60} startedAt={sessionStartedAt} onTimeUp={() => navigateStudy('break', studyType, breakTimeMinutes * 60)} />
       )}
       
       <AnimatePresence>
         {studyGoal !== 'oral' && studyState === 'break' && (
-          <StudyBreakScreen key="break" breakTimeMinutes={breakTimeMinutes} onEndBreak={() => navigateStudy('studying', studyType)} />
+          <StudyBreakScreen key="break" breakTimeMinutes={breakTimeMinutes} startedAt={sessionStartedAt} onEndBreak={() => navigateStudy('studying', studyType, pomodoroEnabled ? studyTimeMinutes * 60 : Number.MAX_SAFE_INTEGER)} />
         )}
       </AnimatePresence>
     </div>
