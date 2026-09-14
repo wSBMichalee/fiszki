@@ -9,9 +9,20 @@ export function buildPrompt(subject?: string, topic?: string): string {
     contextIntro += `Temat: ${topic.trim()}. `
   }
 
+  const baseInstructions = `Przeanalizuj CAŁY ten dokument (wszystkie strony bez pomijania) i wyciągnij z niego logiczne pary pytanie-odpowiedź do nauki w formie fiszek.
+
+BARDZO WAŻNE REGUŁY:
+1. NIE streszczaj odpowiedzi. Jeśli materiał źródłowy zawiera listy, wyliczenia lub podpunkty, zachowaj je WSZYSTKIE w odpowiedzi.
+2. Jeśli materiał zawiera tabele lub sekcje porównujące dwa pojęcia, przenieś do fiszki WSZYSTKIE różnice i cechy wymienione w źródle.
+3. Nigdy nie pomijaj konkretnych przykładów wymienionych w materiale źródłowym – dodaj je do odpowiedzi.
+4. Zachowaj oryginalną strukturę formatowania w polu "answer". Używaj znaczników nowej linii (\\n) oraz list wypunktowanych (np. "- ") tam, gdzie ułatwi to czytanie długich odpowiedzi.
+5. Jeśli oryginalne pojęcie ma w źródle krótką, prostą definicję, zostaw ją krótką. Nie wymyślaj i nie dodawaj sztucznie punktów czy przykładów, których nie było w dokumencie. Długość odpowiedzi ma idealnie odzwierciedlać złożoność materiału źródłowego.
+
+Zwróć WYŁĄCZNIE czysty JSON w formacie: [{"question": "...", "answer": "..."}, ...]. Nie dodawaj żadnego dodatkowego tekstu ani bloków markdown, zwracasz sam JSON.`
+
   return contextIntro.length > 0
-    ? `${contextIntro}Przeanalizuj CAŁY ten dokument (zdjęcie lub plik PDF, wszystkie strony bez pomijania żadnej z nich) z tego przedmiotu i tematu i wyciągnij z niego wszystkie logiczne pary pytanie-odpowiedź do nauki w formie fiszek, używając terminologii właściwej dla tego kontekstu. Zwróć WYŁĄCZNIE czysty JSON w formacie: [{"question": "...", "answer": "..."}, ...]. Nie dodawaj żadnego dodatkowego tekstu ani bloków markdown, zwracasz sam JSON.`
-    : 'Przeanalizuj CAŁY ten dokument (zdjęcie lub plik PDF, wszystkie strony bez pomijania żadnej z nich) i wyciągnij z niego wszystkie logiczne pary pytanie-odpowiedź do nauki w formie fiszek. Zwróć WYŁĄCZNIE czysty JSON w formacie: [{"question": "...", "answer": "..."}, ...]. Nie dodawaj żadnego dodatkowego tekstu ani bloków markdown, zwracasz sam JSON.'
+    ? `${contextIntro} ${baseInstructions}`
+    : baseInstructions
 }
 
 export function parseGeminiResponse(responseText: string): any[] {
