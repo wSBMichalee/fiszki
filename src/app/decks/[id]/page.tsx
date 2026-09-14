@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import StudyMode from '@/components/StudyMode'
 import DeckGallery from '@/components/DeckGallery'
+import DeckStatusPoller from './DeckStatusPoller'
 
 export default async function DeckPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -28,19 +29,29 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
     notFound()
   }
 
+  const isProcessingOrError = deck.processing_status === 'pending' || deck.processing_status === 'processing' || deck.processing_status === 'error'
+
   return (
     <main className="flex-1 max-w-2xl w-full mx-auto p-4 md:p-8 flex flex-col min-h-[calc(100dvh-64px)]">
       <div className="mb-4 sm:mb-6 flex justify-between items-center gap-3">
         <h1 className="text-xl sm:text-2xl font-serif text-[--color-navy] line-clamp-1 min-w-0">{deck.title}</h1>
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <DeckGallery images={deck.source_image_urls} />
-          <span className="shrink-0 text-xs sm:text-sm font-medium text-[--color-graphite] bg-white border border-gray-200 px-3 py-1 sm:py-1.5 rounded-full shadow-sm">
-            {cards.length} fiszek
-          </span>
+          {!isProcessingOrError && (
+            <span className="shrink-0 text-xs sm:text-sm font-medium text-[--color-graphite] bg-white border border-gray-200 px-3 py-1 sm:py-1.5 rounded-full shadow-sm">
+              {cards.length} fiszek
+            </span>
+          )}
         </div>
       </div>
       
-      {cards.length > 0 ? (
+      {isProcessingOrError ? (
+        <DeckStatusPoller 
+          deckId={deck.id} 
+          initialStatus={deck.processing_status} 
+          error={deck.processing_error} 
+        />
+      ) : cards.length > 0 ? (
         <Suspense fallback={<div className="flex-1 flex items-center justify-center text-sm text-[var(--color-graphite)]">Ładowanie sesji nauki...</div>}>
           <StudyMode key={id} deckId={id} initialCards={cards} />
         </Suspense>

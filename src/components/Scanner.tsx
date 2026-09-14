@@ -110,17 +110,14 @@ export default function Scanner() {
           }
         } catch (err) {
           if (err instanceof Error && err.message.includes('150 stron')) {
-            throw err // Przekaż nasz własny błąd
+            throw err
           }
           console.error('Błąd weryfikacji PDF:', err)
-          // Ignoruj inne błędy parsowania (pozwól przejść dalej), żeby nie psuć zdrowych plików
         }
         // ---------------------------------
 
         const supabase = createClient()
         
-        // WYMUSZENIE załadowania sesji przez klienta przed próbą zapisu,
-        // co rozwiązuje częsty problem z RLS (klient nie wysyła Bearer tokenu)
         const { data: { session } } = await supabase.auth.getSession()
         if (!session) {
           throw new Error('Błąd autoryzacji: brak aktywnej sesji podczas wgrywania pliku. Zaloguj się ponownie.')
@@ -128,12 +125,6 @@ export default function Scanner() {
 
         const filename = `pdf_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.pdf`
         
-        console.log('--- DIAGNOSTYKA UPLOADU ---')
-        console.log('Session istnieje:', !!session)
-        console.log('Access token:', session?.access_token ? 'Obecny (ukryty ze względów bezp.)' : 'Brak')
-        console.log('Path (nazwa pliku):', filename)
-        console.log('---------------------------')
-
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('deck-images')
           .upload(filename, pdfFileToUpload, {
@@ -149,36 +140,57 @@ export default function Scanner() {
           .getPublicUrl(uploadData.path)
 
         finalPhoto = publicUrlData.publicUrl
+        
         payload = { fileUrl: finalPhoto, subject: subject.trim(), topic: topic.trim() }
+        const res = await fetch('/api/process-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+
+        if (!res.ok) {
+          const text = await res.text()
+          try {
+            const data = JSON.parse(text)
+            throw new Error(data.error || 'Wystąpił błąd podczas analizy')
+          } catch {
+            throw new Error(text || `Wystąpił błąd HTTP: ${res.status}`)
+          }
+        }
+        
+        const data = await res.json()
+        if (data.status === 'processing' && data.deckId) {
+          router.push(`/decks/${data.deckId}`)
+          return
+        }
       } else {
         payload = { imageBase64: photo, subject: subject.trim(), topic: topic.trim() }
-      }
+        const res = await fetch('/api/parse-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
 
-      const res = await fetch('/api/parse-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      
-      if (!res.ok) {
-        const text = await res.text()
-        try {
-          const data = JSON.parse(text)
-          throw new Error(data.error || 'Wystąpił błąd podczas analizy')
-        } catch {
-          // Jeśli odpowiedź to nie JSON (np. "Request Entity Too Large")
-          throw new Error(text || `Wystąpił błąd HTTP: ${res.status}`)
+        if (!res.ok) {
+          const text = await res.text()
+          try {
+            const data = JSON.parse(text)
+            throw new Error(data.error || 'Wystąpił błąd podczas analizy')
+          } catch {
+            throw new Error(text || `Wystąpił błąd HTTP: ${res.status}`)
+          }
+        }
+        
+        const data = await res.json()
+        if (data.cards) {
+          setCards((prev) => [...prev, ...data.cards])
+          setNoteImages((prev) => [...prev, finalPhoto]) // Save image for uploading later
+          if (subject.trim() && title === 'Nowy zestaw fiszek') {
+            setTitle(`Zestaw: ${subject.trim()}`)
+          }
+          navigateStep('edit')
         }
       }
-      
-      const data = await res.json()
-      
-      setCards((prev) => [...prev, ...data.cards])
-      setNoteImages((prev) => [...prev, finalPhoto]) // Save image for uploading later
-      if (subject.trim() && title === 'Nowy zestaw fiszek') {
-        setTitle(`Zestaw: ${subject.trim()}`)
-      }
-      navigateStep('edit')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Wystąpił błąd')
       navigateStep('preview')
