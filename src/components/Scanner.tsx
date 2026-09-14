@@ -103,8 +103,18 @@ export default function Scanner() {
         body: JSON.stringify({ imageBase64: photo, subject: subject.trim(), topic: topic.trim() })
       })
       
+      if (!res.ok) {
+        const text = await res.text()
+        try {
+          const data = JSON.parse(text)
+          throw new Error(data.error || 'Wystąpił błąd podczas analizy')
+        } catch {
+          // Jeśli odpowiedź to nie JSON (np. "Request Entity Too Large")
+          throw new Error(text || `Wystąpił błąd HTTP: ${res.status}`)
+        }
+      }
+      
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Wystąpił błąd')
       
       setCards((prev) => [...prev, ...data.cards])
       setNoteImages((prev) => [...prev, photo]) // Save image for uploading later
