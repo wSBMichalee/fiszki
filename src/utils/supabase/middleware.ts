@@ -31,6 +31,13 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Inngest Cloud wysyła requesty do /api/inngest bez sesji Supabase.
+  // Autoryzacja tych requestów odbywa się przez signing key wewnątrz serve() z SDK Inngest.
+  // Gdybyśmy puścili te requesty przez sprawdzenie sesji, Inngest zawsze dostałby 401.
+  if (request.nextUrl.pathname.startsWith('/api/inngest')) {
+    return NextResponse.next({ request })
+  }
+
   const isPublicPage =
     request.nextUrl.pathname === '/' ||
     request.nextUrl.pathname.startsWith('/login') ||
