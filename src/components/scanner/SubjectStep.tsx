@@ -7,10 +7,12 @@ import Button from '@/components/Button'
 interface SubjectStepProps {
   subject: string
   setSubject: (val: string) => void
+  topic: string
+  setTopic: (val: string) => void
   onNext: () => void
 }
 
-export default function SubjectStep({ subject, setSubject, onNext }: SubjectStepProps) {
+export default function SubjectStep({ subject, setSubject, topic, setTopic, onNext }: SubjectStepProps) {
   return (
     <motion.div
       key="subject"
@@ -60,11 +62,29 @@ export default function SubjectStep({ subject, setSubject, onNext }: SubjectStep
             />
           </div>
 
+          <div className="flex flex-col gap-1.5 mt-2">
+            <label 
+              htmlFor="topic-input" 
+              className="text-xs font-semibold text-[var(--color-navy)] uppercase tracking-wider"
+            >
+              Temat (opcjonalnie)
+            </label>
+            <input
+              id="topic-input"
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="np. Fotosynteza, Prawo rzymskie - zobowiązania, II wojna światowa"
+              className="w-full px-4 py-3 rounded-xl border border-black/10 focus:outline-none focus:ring-2 focus:ring-[var(--color-navy)]/15 focus:border-[var(--color-navy)] transition-all text-sm bg-white text-[var(--color-navy)] placeholder:text-[var(--color-graphite)]/40 font-medium"
+            />
+            <p className="text-xs text-[var(--color-graphite)] mt-1">Pomaga AI dokładniej dobrać kontekst, jeśli przedmiot jest obszerny.</p>
+          </div>
+
           <Button
             type="submit"
             variant="primary"
             size="md"
-            className="w-full gap-2 mt-2 group"
+            className="w-full gap-2 mt-4 group"
             disabled={!subject.trim()}
           >
             <span>Dalej</span>

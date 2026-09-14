@@ -9,6 +9,7 @@ create table if not exists public.decks (
   user_id uuid references auth.users(id) on delete cascade not null,
   title text not null,
   subject text,
+  topic text,
   source_image_urls text[],
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

@@ -7,6 +7,7 @@ export async function saveDeck(
   title: string,
   cards: { question: string; answer: string }[],
   subject?: string,
+  topic?: string,
   sourceImageUrls?: string[]
 ) {
   const supabase = await createClient()
@@ -19,6 +20,7 @@ export async function saveDeck(
     .insert({
       title,
       subject: subject?.trim() || null,
+      topic: topic?.trim() || null,
       user_id: userData.user.id,
       source_image_urls: sourceImageUrls || []
     })

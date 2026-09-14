@@ -13,14 +13,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
     }
 
-    const { imageBase64, subject } = await req.json()
+    const { imageBase64, subject, topic } = await req.json()
 
     if (!imageBase64) {
       return NextResponse.json({ error: 'Brak obrazu' }, { status: 400 })
     }
 
-    const promptText = subject && typeof subject === 'string' && subject.trim().length > 0
-      ? `Przedmiot: ${subject.trim()}. Przeanalizuj to zdjęcie notatek z tego przedmiotu i wyciągnij z niego wszystkie logiczne pary pytanie-odpowiedź do nauki w formie fiszek, używając terminologii właściwej dla tego przedmiotu. Zwróć WYŁĄCZNIE czysty JSON w formacie: [{"question": "...", "answer": "..."}, ...]. Nie dodawaj żadnego dodatkowego tekstu ani bloków markdown, zwracasz sam JSON.`
+    let contextIntro = ''
+    if (subject && typeof subject === 'string' && subject.trim().length > 0) {
+      contextIntro += `Przedmiot: ${subject.trim()}. `
+    }
+    if (topic && typeof topic === 'string' && topic.trim().length > 0) {
+      contextIntro += `Temat: ${topic.trim()}. `
+    }
+
+    const promptText = contextIntro.length > 0
+      ? `${contextIntro}Przeanalizuj to zdjęcie notatek z tego przedmiotu i tematu i wyciągnij z niego wszystkie logiczne pary pytanie-odpowiedź do nauki w formie fiszek, używając terminologii właściwej dla tego kontekstu. Zwróć WYŁĄCZNIE czysty JSON w formacie: [{"question": "...", "answer": "..."}, ...]. Nie dodawaj żadnego dodatkowego tekstu ani bloków markdown, zwracasz sam JSON.`
       : 'Przeanalizuj to zdjęcie notatek/podręcznika i wyciągnij z niego wszystkie logiczne pary pytanie-odpowiedź do nauki w formie fiszek. Zwróć WYŁĄCZNIE czysty JSON w formacie: [{"question": "...", "answer": "..."}, ...]. Nie dodawaj żadnego dodatkowego tekstu ani bloków markdown, zwracasz sam JSON.'
 
     let mimeType = 'image/jpeg'

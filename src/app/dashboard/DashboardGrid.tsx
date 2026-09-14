@@ -10,6 +10,7 @@ type Deck = {
   id: string;
   title: string;
   subject?: string | null;
+  topic?: string | null;
   created_at: string;
   last_studied_at?: string | null;
 };
@@ -228,11 +229,18 @@ export default function DashboardGrid({
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gray-50 flex items-center justify-center text-[var(--color-navy)]/40 group-hover:text-[var(--color-gold)] group-hover:bg-amber-50/50 transition-colors shrink-0">
                     <Layers size={15} />
                   </div>
-                  {deck.subject && (
-                    <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200/60 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-amber-900/80 truncate max-w-[80px] sm:max-w-[120px]">
-                      {deck.subject}
-                    </span>
-                  )}
+                  <div className="flex flex-col items-end gap-1">
+                    {deck.subject && (
+                      <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200/60 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-amber-900/80 truncate max-w-[80px] sm:max-w-[120px]">
+                        {deck.subject}
+                      </span>
+                    )}
+                    {deck.topic && (
+                      <span className="text-[10px] sm:text-xs text-[var(--color-graphite)]/70 truncate max-w-[100px] sm:max-w-[140px]">
+                        {deck.topic}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <h3 className="font-serif font-bold text-base sm:text-lg md:text-xl text-[var(--color-navy)] leading-snug group-hover:text-[var(--color-gold)] transition-colors duration-200 line-clamp-3 relative z-10 pr-8">

@@ -27,6 +27,7 @@ export default function Scanner() {
     router.push(`?step=${newStep}`)
   }
   const [subject, setSubject] = useState('')
+  const [topic, setTopic] = useState('')
   const [photo, setPhoto] = useState<string | null>(null)
   const [textInput, setTextInput] = useState('')
   const [cards, setCards] = useState<Card[]>([])
@@ -76,7 +77,7 @@ export default function Scanner() {
       const res = await fetch('/api/parse-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: photo, subject: subject.trim() })
+        body: JSON.stringify({ imageBase64: photo, subject: subject.trim(), topic: topic.trim() })
       })
       
       const data = await res.json()
@@ -103,7 +104,7 @@ export default function Scanner() {
       const res = await fetch('/api/parse-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: textInput.trim(), subject: subject.trim() })
+        body: JSON.stringify({ text: textInput.trim(), subject: subject.trim(), topic: topic.trim() })
       })
       
       const data = await res.json()
@@ -181,7 +182,7 @@ export default function Scanner() {
         }
       }
 
-      const deckId = await saveDeck(title, cards, subject.trim(), uploadedUrls)
+      const deckId = await saveDeck(title, cards, subject.trim(), topic.trim(), uploadedUrls)
       router.push(`/decks/${deckId}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Wystąpił błąd')
@@ -210,6 +211,8 @@ export default function Scanner() {
           <SubjectStep 
             subject={subject} 
             setSubject={setSubject} 
+            topic={topic}
+            setTopic={setTopic}
             onNext={() => navigateStep('method')} 
           />
         )}
