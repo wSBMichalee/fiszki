@@ -393,7 +393,7 @@ export default function StudyModeDefense({
                 exit={{ opacity: 0, x: -20 }}
                 className="w-full flex flex-col items-center"
               >
-                <h2 className="text-2xl sm:text-3xl font-serif text-[var(--color-navy)] font-bold text-center mb-10 leading-snug">
+                <h2 className={`font-serif text-[var(--color-navy)] font-bold text-center mb-10 leading-snug ${defenseCards[currentIndex]?.question.length > 120 ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'}`}>
                   {defenseCards[currentIndex]?.question}
                 </h2>
 
