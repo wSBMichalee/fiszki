@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Timer, Coffee, Play } from 'lucide-react'
@@ -123,17 +122,12 @@ export default function StudyMode({
   deckId: string
   initialCards: Card[]
 }) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  const phaseParam = searchParams.get('phase') as StudyState | null
-  const modeParam = searchParams.get('mode') as StudyType | null
-  
-  const studyState: StudyState = (phaseParam && ['setup', 'studying', 'break'].includes(phaseParam)) ? phaseParam : 'setup'
-  const studyType: StudyType = (modeParam && ['standard', 'exam', 'defense'].includes(modeParam)) ? modeParam : 'standard'
+  const [studyState, setStudyState] = useState<StudyState>('setup')
+  const [studyType, setStudyType] = useState<StudyType>('standard')
 
   const navigateStudy = (newPhase: StudyState, newMode: StudyType) => {
-    router.push(`?phase=${newPhase}&mode=${newMode}`)
+    setStudyState(newPhase)
+    setStudyType(newMode)
   }
 
   const [cards, setCards] = useState<Card[]>(initialCards)
