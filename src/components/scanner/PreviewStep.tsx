@@ -5,11 +5,12 @@ import { FileText } from 'lucide-react'
 
 interface PreviewStepProps {
   photo: string | null
+  error?: string
   onBack: () => void
   onParseImage: () => void
 }
 
-export default function PreviewStep({ photo, onBack, onParseImage }: PreviewStepProps) {
+export default function PreviewStep({ photo, error, onBack, onParseImage }: PreviewStepProps) {
   const isPdf = photo?.startsWith('data:application/pdf')
 
   return (
@@ -30,6 +31,12 @@ export default function PreviewStep({ photo, onBack, onParseImage }: PreviewStep
           </div>
           <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Wybrano plik PDF</h3>
           <p className="text-white/60 max-w-sm text-sm sm:text-base">System przetworzy ten dokument i automatycznie wyciągnie z niego wszystkie fiszki.</p>
+        </div>
+      )}
+      
+      {error && (
+        <div className="absolute top-4 inset-x-4 p-4 bg-red-500/90 text-white rounded-xl text-center text-sm font-medium z-20 shadow-lg backdrop-blur-sm">
+          {error}
         </div>
       )}
       

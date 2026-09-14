@@ -87,7 +87,12 @@ export default function Scanner() {
   }
 
   const parseImage = async () => {
-    if (!photo) return
+    console.log('parseImage called, photo startsWith:', photo?.substring(0, 30))
+    if (!photo) {
+      console.log('photo is falsy, returning early')
+      return
+    }
+    console.log('navigating to loading...')
     navigateStep('loading')
     setError('')
     
@@ -275,6 +280,7 @@ export default function Scanner() {
         {step === 'preview' && (
           <PreviewStep 
             photo={photo} 
+            error={error}
             onBack={() => navigateStep('method')} 
             onParseImage={parseImage} 
           />
