@@ -99,6 +99,14 @@ export default function Scanner() {
 
       if (pdfFileToUpload) {
         const supabase = createClient()
+        
+        // WYMUSZENIE załadowania sesji przez klienta przed próbą zapisu,
+        // co rozwiązuje częsty problem z RLS (klient nie wysyła Bearer tokenu)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        if (!session) {
+          throw new Error('Błąd autoryzacji: brak aktywnej sesji podczas wgrywania pliku. Zaloguj się ponownie.')
+        }
+
         const filename = `pdf_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.pdf`
         
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -197,6 +205,8 @@ export default function Scanner() {
       
       if (noteImages.length > 0) {
         const supabase = createClient()
+        await supabase.auth.getSession() // Wymuszenie załadowania sesji przed pętlą wgrywania
+
         for (let i = 0; i < noteImages.length; i++) {
           try {
             if (noteImages[i].startsWith('http')) {
