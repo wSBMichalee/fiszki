@@ -36,9 +36,12 @@ export async function POST(req: Request) {
     if (imageBase64.includes(',')) {
       const parts = imageBase64.split(',')
       base64Data = parts[1]
-      const match = parts[0].match(/data:([a-zA-Z0-9+-]+\/[a-zA-Z0-9+.-]+);base64/)
-      if (match) {
-        mimeType = match[1]
+      // Wzorzec data:[<mediatype>][;base64],
+      // Bezpieczniejsze wyciąganie mimeType bez rygorystycznego regexu
+      const meta = parts[0].replace('data:', '')
+      const mime = meta.split(';')[0]
+      if (mime) {
+        mimeType = mime
       }
     }
     
