@@ -118,7 +118,7 @@ export default function StudyModeStandard({
           <ChevronLeft className="text-[var(--color-navy)]" size={24} />
         </button>
 
-        <div className="w-full max-w-[320px] relative perspective-1000">
+        <div className="w-full max-w-[320px] relative perspective-1000 grid">
           <AnimatePresence custom={direction}>
             <motion.div
               key={currentCard.id}
@@ -155,7 +155,7 @@ export default function StudyModeStandard({
               }}
               transition={{ type: "spring", stiffness: 320, damping: 26 }}
               style={{ transformStyle: is3D ? "preserve-3d" : "flat" }}
-              className="w-full min-h-[400px] grid cursor-pointer touch-pan-y"
+              className="w-full min-h-[400px] grid col-start-1 row-start-1 cursor-pointer touch-pan-y"
               onClick={() => setIsFlipped(!isFlipped)}
             >
             {/* Front */}

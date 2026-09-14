@@ -265,7 +265,7 @@ export default function StudyModeExam({
       </div>
       
       {/* Card area with 3D examination stack effect */}
-      <div className="w-full relative perspective-1000 px-1 sm:px-4">
+      <div className="w-full relative perspective-1000 px-1 sm:px-4 grid">
         <AnimatePresence custom={direction}>
           <motion.div
             key={currentCard.id}
@@ -298,7 +298,7 @@ export default function StudyModeExam({
             }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
             style={{ transformStyle: is3D ? "preserve-3d" : "flat" }}
-            className="w-full min-h-[400px] grid cursor-pointer"
+            className="w-full min-h-[400px] grid col-start-1 row-start-1 cursor-pointer"
             onClick={() => setIsFlipped(!isFlipped)}
           >
             {/* Front */}
