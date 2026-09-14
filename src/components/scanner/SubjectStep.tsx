@@ -18,7 +18,7 @@ export default function SubjectStep({ subject, setSubject, onNext }: SubjectStep
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.2 }}
-      className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 text-center"
+      className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 text-center min-h-0 overflow-y-auto"
     >
       <div className="w-full max-w-md flex flex-col items-center">
         <div className="w-14 h-14 rounded-2xl bg-[var(--color-navy)] text-white flex items-center justify-center mb-5 shadow-xs">

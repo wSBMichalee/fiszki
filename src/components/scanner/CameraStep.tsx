@@ -70,7 +70,7 @@ export default function CameraStep({ onBack, onCapture }: CameraStepProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex-1 flex flex-col bg-black relative"
+      className="flex-1 flex flex-col bg-black relative min-h-0"
     >
       <button
         type="button"
@@ -97,7 +97,7 @@ export default function CameraStep({ onBack, onCapture }: CameraStepProps) {
         </div>
       </div>
       
-      <div className="absolute bottom-0 inset-x-0 p-6 sm:p-8 flex flex-col items-center gap-5 sm:gap-6 bg-gradient-to-t from-black/85 via-black/45 to-transparent">
+      <div className="absolute bottom-0 inset-x-0 p-6 sm:p-8 flex flex-col items-center gap-5 sm:gap-6 bg-gradient-to-t from-black/85 via-black/45 to-transparent z-10">
         <button 
           onClick={takePhoto}
           aria-label="Zrób zdjęcie"

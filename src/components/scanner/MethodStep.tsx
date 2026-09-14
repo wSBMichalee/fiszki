@@ -25,7 +25,7 @@ export default function MethodStep({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.2 }}
-      className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 text-center relative"
+      className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 text-center relative min-h-0 overflow-y-auto"
     >
       <button
         type="button"

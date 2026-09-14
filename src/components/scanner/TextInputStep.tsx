@@ -26,7 +26,7 @@ export default function TextInputStep({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.2 }}
-      className="flex-1 flex flex-col items-center justify-start p-4 sm:p-8 relative"
+      className="flex-1 flex flex-col items-center justify-start p-4 sm:p-8 relative min-h-0 overflow-y-auto"
     >
       <div className="w-full max-w-3xl flex flex-col h-full pt-12 sm:pt-4">
         <button
