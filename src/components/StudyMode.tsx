@@ -235,9 +235,10 @@ export default function StudyMode({
         )}
 
         {/* Pomodoro Settings */}
-        <div className="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4 overflow-hidden">
-          <div className="flex justify-between items-center">
-            <div>
+        {studyGoal !== 'oral' && (
+          <div className="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4 overflow-hidden">
+            <div className="flex justify-between items-center">
+              <div>
               <h3 className="font-semibold text-[var(--color-navy)] text-sm uppercase tracking-wider">Tryb Skupienia</h3>
               <p className="text-xs text-[var(--color-graphite)] mt-1">Technika Pomodoro</p>
             </div>
@@ -288,8 +289,9 @@ export default function StudyMode({
                 </div>
               </motion.div>
             )}
-          </AnimatePresence>
-        </div>
+            </AnimatePresence>
+          </div>
+        )}
 
         <button 
           onClick={startStudying}
@@ -338,12 +340,12 @@ export default function StudyMode({
         />
       )}
       
-      {pomodoroEnabled && studyState === 'studying' && !isSessionFinished && (
+      {studyGoal !== 'oral' && pomodoroEnabled && studyState === 'studying' && !isSessionFinished && (
         <PomodoroOverlay key="overlay" initialTime={studyTimeMinutes * 60} onTimeUp={() => setStudyState('break')} />
       )}
       
       <AnimatePresence>
-        {studyState === 'break' && (
+        {studyGoal !== 'oral' && studyState === 'break' && (
           <StudyBreakScreen key="break" breakTimeMinutes={breakTimeMinutes} onEndBreak={() => setStudyState('studying')} />
         )}
       </AnimatePresence>
