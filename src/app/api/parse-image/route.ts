@@ -4,6 +4,8 @@ import { createClient } from '@/utils/supabase/server'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
+export const maxDuration = 60 // Zwiększenie limitu czasu wykonywania na Vercelu do 60 sekund
+
 export async function POST(req: Request) {
   try {
     const supabase = await createClient()
@@ -58,7 +60,8 @@ export async function POST(req: Request) {
     }
     
     let response
-    for (let attempt = 1; attempt <= 2; attempt++) {
+    const maxAttempts = 4
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         response = await ai.models.generateContent({
           model: 'gemini-3.6-flash',
@@ -85,11 +88,22 @@ export async function POST(req: Request) {
         break
       } catch (err: unknown) {
         const error = err as { status?: number; code?: number }
-        if (attempt === 1 && (error?.status === 503 || error?.code === 503)) {
-          console.warn('Gemini 503 spike, retrying in 1.2s...')
-          await new Promise(res => setTimeout(res, 1200))
+        const isTransientError = error?.status === 503 || error?.code === 503 || error?.status === 429
+        
+        if (attempt < maxAttempts && isTransientError) {
+          const delay = Math.pow(2, attempt - 1) * 1000 // 1000ms, 2000ms, 4000ms
+          console.warn(`Gemini 503/429 spike, retrying in ${delay}ms (attempt ${attempt}/${maxAttempts})...`)
+          await new Promise(res => setTimeout(res, delay))
           continue
         }
+        
+        if (attempt === maxAttempts && isTransientError) {
+          return NextResponse.json(
+            { error: 'Serwery AI są chwilowo przeciążone, spróbuj ponownie za chwilę' }, 
+            { status: 503 }
+          )
+        }
+        
         throw err
       }
     }

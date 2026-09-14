@@ -102,7 +102,7 @@ export default function Scanner() {
         
         // WYMUSZENIE załadowania sesji przez klienta przed próbą zapisu,
         // co rozwiązuje częsty problem z RLS (klient nie wysyła Bearer tokenu)
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        const { data: { session } } = await supabase.auth.getSession()
         if (!session) {
           throw new Error('Błąd autoryzacji: brak aktywnej sesji podczas wgrywania pliku. Zaloguj się ponownie.')
         }
