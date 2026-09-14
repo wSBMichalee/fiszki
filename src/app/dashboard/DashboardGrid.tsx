@@ -208,10 +208,10 @@ export default function DashboardGrid({
         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 sm:gap-5"
       >
         {decks.map(deck => (
-          <motion.div key={deck.id} variants={item}>
+          <motion.div key={deck.id} variants={item} className="group relative">
             <Link 
               href={`/decks/${deck.id}`}
-              className="group relative block h-48 sm:h-52 rounded-2xl p-3.5 sm:p-5 flex flex-col justify-end overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)]"
+              className="block h-48 sm:h-52 rounded-2xl p-3.5 sm:p-5 flex flex-col justify-end overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)]"
             >
               {/* Stack effect background cards (Mochi craftsmanship) */}
               <div className="absolute inset-0 bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100/60 -z-10" />

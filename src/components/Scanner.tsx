@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { saveDeck } from '@/app/decks/new/actions'
 import { AnimatePresence } from 'framer-motion'
 import { createClient } from '@/utils/supabase/client'
@@ -16,7 +16,16 @@ import LoadingStep from './scanner/LoadingStep'
 import EditStep from './scanner/EditStep'
 
 export default function Scanner() {
-  const [step, setStep] = useState<Step>('subject')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  const stepParam = searchParams.get('step') as Step | null
+  const validSteps: Step[] = ['subject', 'method', 'camera', 'preview', 'text', 'loading', 'edit']
+  const step: Step = (stepParam && validSteps.includes(stepParam)) ? stepParam : 'subject'
+
+  const navigateStep = (newStep: Step) => {
+    router.push(`?step=${newStep}`)
+  }
   const [subject, setSubject] = useState('')
   const [photo, setPhoto] = useState<string | null>(null)
   const [textInput, setTextInput] = useState('')
@@ -25,8 +34,6 @@ export default function Scanner() {
   const [error, setError] = useState('')
   const [title, setTitle] = useState('Nowy zestaw fiszek')
   const [isSaving, setIsSaving] = useState(false)
-  
-  const router = useRouter()
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -53,7 +60,7 @@ export default function Scanner() {
         } else {
           setPhoto(dataUrl)
         }
-        setStep('preview')
+        navigateStep('preview')
       }
       img.src = dataUrl
     }
@@ -62,7 +69,7 @@ export default function Scanner() {
 
   const parseImage = async () => {
     if (!photo) return
-    setStep('loading')
+    navigateStep('loading')
     setError('')
     
     try {
@@ -80,16 +87,16 @@ export default function Scanner() {
       if (subject.trim() && title === 'Nowy zestaw fiszek') {
         setTitle(`Zestaw: ${subject.trim()}`)
       }
-      setStep('edit')
+      navigateStep('edit')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Wystąpił błąd')
-      setStep('preview')
+      navigateStep('preview')
     }
   }
 
   const parseText = async () => {
     if (!textInput.trim()) return
-    setStep('loading')
+    navigateStep('loading')
     setError('')
     
     try {
@@ -106,13 +113,23 @@ export default function Scanner() {
       if (subject.trim() && title === 'Nowy zestaw fiszek') {
         setTitle(`Zestaw: ${subject.trim()}`)
       }
-      setStep('edit')
+      navigateStep('edit')
       setTextInput('')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Wystąpił błąd')
-      setStep('text')
+      navigateStep('text')
     }
   }
+
+  // Walidacja poprawności stanu względem kroku w URL
+  useEffect(() => {
+    // Jeśli krok zależy od stanu którego nie ma (np. po wklejeniu linku w nowej karcie), wracamy do początku
+    if (['method', 'camera', 'preview', 'text', 'loading', 'edit'].includes(step) && !subject) {
+      router.replace('?step=subject')
+    } else if (step === 'preview' && !photo) {
+      router.replace('?step=camera')
+    }
+  }, [step, subject, photo, router])
 
   const handleSave = async () => {
     if (cards.length === 0) return
@@ -193,16 +210,16 @@ export default function Scanner() {
           <SubjectStep 
             subject={subject} 
             setSubject={setSubject} 
-            onNext={() => setStep('method')} 
+            onNext={() => navigateStep('method')} 
           />
         )}
 
         {step === 'method' && (
           <MethodStep 
             subject={subject} 
-            onBack={() => setStep('subject')} 
-            onSelectCamera={() => setStep('camera')} 
-            onSelectText={() => setStep('text')} 
+            onBack={() => navigateStep('subject')} 
+            onSelectCamera={() => navigateStep('camera')} 
+            onSelectText={() => navigateStep('text')} 
             onFileUpload={handleFileUpload} 
           />
         )}
@@ -212,17 +229,17 @@ export default function Scanner() {
             textInput={textInput} 
             setTextInput={setTextInput} 
             error={error} 
-            onBack={() => setStep('method')} 
+            onBack={() => navigateStep('method')} 
             onParseText={parseText} 
           />
         )}
 
         {step === 'camera' && (
           <CameraStep 
-            onBack={() => setStep('method')} 
+            onBack={() => navigateStep('method')} 
             onCapture={(dataUrl) => {
               setPhoto(dataUrl)
-              setStep('preview')
+              navigateStep('preview')
             }} 
           />
         )}
@@ -230,7 +247,7 @@ export default function Scanner() {
         {step === 'preview' && (
           <PreviewStep 
             photo={photo} 
-            onBack={() => setStep('method')} 
+            onBack={() => navigateStep('method')} 
             onParseImage={parseImage} 
           />
         )}
@@ -248,7 +265,7 @@ export default function Scanner() {
             error={error} 
             isSaving={isSaving} 
             onSave={handleSave} 
-            onAddMoreText={() => setStep('method')} 
+            onAddMoreText={() => navigateStep('method')} 
             onUpdateCard={updateCard} 
             onRemoveCard={removeCard} 
             onAddCard={addCard} 

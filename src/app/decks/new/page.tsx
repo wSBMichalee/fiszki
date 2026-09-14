@@ -1,4 +1,5 @@
 import Scanner from '@/components/Scanner'
+import { Suspense } from 'react'
 
 export default function NewDeckPage() {
   return (
@@ -7,7 +8,9 @@ export default function NewDeckPage() {
         <h1 className="text-2xl font-serif text-[--color-navy]">Skaner fiszek</h1>
         <p className="text-[--color-graphite] text-sm mt-1">Zrób zdjęcie notatek, a AI zamieni je na fiszki.</p>
       </div>
-      <Scanner />
+      <Suspense fallback={<div className="flex-1 flex items-center justify-center">Ładowanie skanera...</div>}>
+        <Scanner />
+      </Suspense>
     </main>
   )
 }
