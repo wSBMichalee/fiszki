@@ -17,6 +17,7 @@ BARDZO WAŻNE REGUŁY:
 3. Nigdy nie pomijaj konkretnych przykładów wymienionych w materiale źródłowym – dodaj je do odpowiedzi.
 4. Zachowaj oryginalną strukturę formatowania w polu "answer". Używaj znaczników nowej linii (\\n) oraz list wypunktowanych (np. "- ") tam, gdzie ułatwi to czytanie długich odpowiedzi.
 5. Jeśli oryginalne pojęcie ma w źródle krótką, prostą definicję, zostaw ją krótką. Nie wymyślaj i nie dodawaj sztucznie punktów czy przykładów, których nie było w dokumencie. Długość odpowiedzi ma idealnie odzwierciedlać złożoność materiału źródłowego.
+6. Jeśli pytania w dokumencie są numerowane (np. 1., 2., 3.), MUSISZ wyciągnąć WSZYSTKIE numerowane pytania bez wyjątku, zachowując ciągłość numeracji - nie pomijaj żadnego, nawet jeśli wydaje się podobne do innego lub jest krótkie. Przed zwróceniem wyniku, zweryfikuj czy liczba wygenerowanych fiszek odpowiada najwyższemu numerowi pytania w dokumencie.
 
 Zwróć WYŁĄCZNIE czysty JSON w formacie: [{"question": "...", "answer": "..."}, ...]. Nie dodawaj żadnego dodatkowego tekstu ani bloków markdown, zwracasz sam JSON.`
 
