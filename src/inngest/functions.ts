@@ -98,12 +98,10 @@ export const processNotesJob = inngest.createFunction(
         throw new NonRetriableError('Wygenerowano pustą listę fiszek')
       }
 
-      const cardsToInsert = parsedCards.map((card: any, index: number) => ({
+      const cardsToInsert = parsedCards.map((card: any) => ({
         deck_id: deckId,
-        front: card.question || card.front || '',
-        back: card.answer || card.back || '',
-        order_index: index,
-        user_id: userId // Dodajemy user_id jeśli RLS tabeli cards tego wymaga
+        question: card.question || card.front || '',
+        answer: card.answer || card.back || '',
       }))
 
       const { error } = await supabase
