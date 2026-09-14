@@ -9,6 +9,7 @@ interface MethodStepProps {
   onSelectCamera: () => void
   onSelectText: () => void
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onPdfUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export default function MethodStep({
@@ -16,7 +17,8 @@ export default function MethodStep({
   onBack,
   onSelectCamera,
   onSelectText,
-  onFileUpload
+  onFileUpload,
+  onPdfUpload
 }: MethodStepProps) {
   return (
     <motion.div
@@ -43,7 +45,7 @@ export default function MethodStep({
         Wybierz najwygodniejszy sposób wprowadzenia materiału do analizy dla: <strong>{subject}</strong>.
       </p>
 
-      <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Take Photo */}
         <button
           onClick={onSelectCamera}
@@ -80,8 +82,23 @@ export default function MethodStep({
             <FileText size={24} />
           </div>
           <h3 className="font-bold text-[var(--color-navy)] mb-1">Wklej tekst</h3>
-          <p className="text-xs text-[var(--color-graphite)] leading-relaxed">Skopiuj tekst z Notatek, Google Keep lub dowolnej aplikacji i wklej tutaj.</p>
+          <p className="text-xs text-[var(--color-graphite)] leading-relaxed">Skopiuj tekst z Notatek lub innej aplikacji i wklej tutaj.</p>
         </button>
+
+        {/* Upload PDF */}
+        <label className="flex flex-col items-center text-center p-6 rounded-2xl border-2 border-gray-100 hover:border-[var(--color-gold)]/50 hover:bg-amber-50/30 transition-all duration-200 cursor-pointer group">
+          <div className="w-12 h-12 rounded-xl bg-gray-100 group-hover:bg-[var(--color-gold)]/20 text-[var(--color-navy)] group-hover:text-[var(--color-gold)] flex items-center justify-center mb-4 transition-colors">
+            <FileText size={24} />
+          </div>
+          <h3 className="font-bold text-[var(--color-navy)] mb-1">Wgraj PDF</h3>
+          <p className="text-xs text-[var(--color-graphite)] leading-relaxed">Wgraj plik PDF z pytaniami i odpowiedziami.</p>
+          <input 
+            type="file" 
+            accept=".pdf,application/pdf" 
+            onChange={onPdfUpload}
+            className="hidden"
+          />
+        </label>
       </div>
     </motion.div>
   )

@@ -28,15 +28,15 @@ export async function POST(req: Request) {
     }
 
     const promptText = contextIntro.length > 0
-      ? `${contextIntro}Przeanalizuj to zdjęcie notatek z tego przedmiotu i tematu i wyciągnij z niego wszystkie logiczne pary pytanie-odpowiedź do nauki w formie fiszek, używając terminologii właściwej dla tego kontekstu. Zwróć WYŁĄCZNIE czysty JSON w formacie: [{"question": "...", "answer": "..."}, ...]. Nie dodawaj żadnego dodatkowego tekstu ani bloków markdown, zwracasz sam JSON.`
-      : 'Przeanalizuj to zdjęcie notatek/podręcznika i wyciągnij z niego wszystkie logiczne pary pytanie-odpowiedź do nauki w formie fiszek. Zwróć WYŁĄCZNIE czysty JSON w formacie: [{"question": "...", "answer": "..."}, ...]. Nie dodawaj żadnego dodatkowego tekstu ani bloków markdown, zwracasz sam JSON.'
+      ? `${contextIntro}Przeanalizuj CAŁY ten dokument (zdjęcie lub plik PDF, wszystkie strony bez pomijania żadnej z nich) z tego przedmiotu i tematu i wyciągnij z niego wszystkie logiczne pary pytanie-odpowiedź do nauki w formie fiszek, używając terminologii właściwej dla tego kontekstu. Zwróć WYŁĄCZNIE czysty JSON w formacie: [{"question": "...", "answer": "..."}, ...]. Nie dodawaj żadnego dodatkowego tekstu ani bloków markdown, zwracasz sam JSON.`
+      : 'Przeanalizuj CAŁY ten dokument (zdjęcie lub plik PDF, wszystkie strony bez pomijania żadnej z nich) i wyciągnij z niego wszystkie logiczne pary pytanie-odpowiedź do nauki w formie fiszek. Zwróć WYŁĄCZNIE czysty JSON w formacie: [{"question": "...", "answer": "..."}, ...]. Nie dodawaj żadnego dodatkowego tekstu ani bloków markdown, zwracasz sam JSON.'
 
     let mimeType = 'image/jpeg'
     let base64Data = imageBase64
     if (imageBase64.includes(',')) {
       const parts = imageBase64.split(',')
       base64Data = parts[1]
-      const match = parts[0].match(/data:(image\/[a-zA-Z0-9+.-]+);base64/)
+      const match = parts[0].match(/data:([a-zA-Z0-9+-]+\/[a-zA-Z0-9+.-]+);base64/)
       if (match) {
         mimeType = match[1]
       }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Timer, Coffee, Play } from 'lucide-react'
@@ -122,9 +123,20 @@ export default function StudyMode({
   deckId: string
   initialCards: Card[]
 }) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const phaseParam = searchParams.get('phase') as StudyState | null
+  const modeParam = searchParams.get('mode') as StudyType | null
+  
+  const studyState: StudyState = (phaseParam && ['setup', 'studying', 'break'].includes(phaseParam)) ? phaseParam : 'setup'
+  const studyType: StudyType = (modeParam && ['standard', 'exam', 'defense'].includes(modeParam)) ? modeParam : 'standard'
+
+  const navigateStudy = (newPhase: StudyState, newMode: StudyType) => {
+    router.push(`?phase=${newPhase}&mode=${newMode}`)
+  }
+
   const [cards, setCards] = useState<Card[]>(initialCards)
-  const [studyType, setStudyType] = useState<StudyType>('standard')
-  const [studyState, setStudyState] = useState<StudyState>('setup')
   const [studyGoal, setStudyGoal] = useState<StudyGoal>('written')
   
   // Shared state for Standard and Exam modes
@@ -134,7 +146,7 @@ export default function StudyMode({
   const [isSessionFinished, setIsSessionFinished] = useState(false)
   
   const handleSwitchMode = (mode: StudyType) => {
-    setStudyType(mode)
+    navigateStudy(studyState, mode)
     setIsSessionFinished(false)
   }
 
@@ -176,13 +188,14 @@ export default function StudyMode({
   }
 
   const startStudying = async () => {
-    setStudyState('studying')
+    navigateStudy('studying', studyType)
     supabase.from('decks').update({ last_studied_at: new Date().toISOString() }).eq('id', deckId).then()
   }
 
-  if (studyState === 'setup') {
-    return (
-      <div className="flex flex-col gap-6 items-center w-full max-w-md mx-auto mt-4 sm:mt-10">
+  return (
+    <>
+      {/* Setup UI */}
+      <div className={studyState === 'setup' ? "flex flex-col gap-6 items-center w-full max-w-md mx-auto mt-4 sm:mt-10" : "hidden"}>
         <h2 className="text-2xl font-serif text-[var(--color-navy)] font-bold">Rozpocznij naukę</h2>
         
         {/* Study Goal selection */}
@@ -300,55 +313,54 @@ export default function StudyMode({
           Rozpocznij naukę
         </button>
       </div>
-    )
-  }
 
-  return (
-    <div className="flex-1 flex flex-col relative min-h-0">
-      {studyType === 'defense' ? (
-        <StudyModeDefense
-          deckId={deckId}
-          cards={cards}
-          onSwitchMode={handleSwitchMode}
-          currentMode={studyType}
-          studyGoal={studyGoal}
-          onFinish={() => setIsSessionFinished(true)}
-        />
-      ) : studyType === 'exam' ? (
-        <StudyModeExam
-          deckId={deckId}
-          cards={sharedCards}
-          currentIndex={sharedIndex}
-          setCards={setSharedCards}
-          setCurrentIndex={setSharedIndex}
-          onCardLearned={handleCardLearned}
-          onSwitchMode={handleSwitchMode}
-          currentMode={studyType}
-          studyGoal={studyGoal}
-          onFinish={() => setIsSessionFinished(true)}
-          onRestart={() => setIsSessionFinished(false)}
-        />
-      ) : (
-        <StudyModeStandard
-          deckId={deckId}
-          cards={sharedCards}
-          currentIndex={sharedIndex}
-          setCurrentIndex={setSharedIndex}
-          onSwitchMode={handleSwitchMode}
-          currentMode={studyType}
-          studyGoal={studyGoal}
-        />
-      )}
+      {/* Active Study UI */}
+      <div className={studyState !== 'setup' ? "flex-1 flex flex-col relative min-h-0" : "hidden"}>
+        {studyType === 'defense' ? (
+          <StudyModeDefense
+            deckId={deckId}
+            cards={cards}
+            onSwitchMode={handleSwitchMode}
+            currentMode={studyType}
+            studyGoal={studyGoal}
+            onFinish={() => setIsSessionFinished(true)}
+          />
+        ) : studyType === 'exam' ? (
+          <StudyModeExam
+            deckId={deckId}
+            cards={sharedCards}
+            currentIndex={sharedIndex}
+            setCards={setSharedCards}
+            setCurrentIndex={setSharedIndex}
+            onCardLearned={handleCardLearned}
+            onSwitchMode={handleSwitchMode}
+            currentMode={studyType}
+            studyGoal={studyGoal}
+            onFinish={() => setIsSessionFinished(true)}
+            onRestart={() => setIsSessionFinished(false)}
+          />
+        ) : (
+          <StudyModeStandard
+            deckId={deckId}
+            cards={sharedCards}
+            currentIndex={sharedIndex}
+            setCurrentIndex={setSharedIndex}
+            onSwitchMode={handleSwitchMode}
+            currentMode={studyType}
+            studyGoal={studyGoal}
+          />
+        )}
       
       {studyGoal !== 'oral' && pomodoroEnabled && studyState === 'studying' && !isSessionFinished && (
-        <PomodoroOverlay key="overlay" initialTime={studyTimeMinutes * 60} onTimeUp={() => setStudyState('break')} />
+        <PomodoroOverlay key="overlay" initialTime={studyTimeMinutes * 60} onTimeUp={() => navigateStudy('break', studyType)} />
       )}
       
       <AnimatePresence>
         {studyGoal !== 'oral' && studyState === 'break' && (
-          <StudyBreakScreen key="break" breakTimeMinutes={breakTimeMinutes} onEndBreak={() => setStudyState('studying')} />
+          <StudyBreakScreen key="break" breakTimeMinutes={breakTimeMinutes} onEndBreak={() => navigateStudy('studying', studyType)} />
         )}
       </AnimatePresence>
     </div>
+    </>
   )
 }

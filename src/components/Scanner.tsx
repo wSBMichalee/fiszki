@@ -68,6 +68,24 @@ export default function Scanner() {
     reader.readAsDataURL(file)
   }
 
+  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    if (file.size > 50 * 1024 * 1024) {
+      setError('Plik PDF jest za duży. Maksymalny dopuszczalny rozmiar to 50 MB.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string
+      setPhoto(dataUrl)
+      navigateStep('preview')
+    }
+    reader.readAsDataURL(file)
+  }
+
   const parseImage = async () => {
     if (!photo) return
     navigateStep('loading')
@@ -230,6 +248,7 @@ export default function Scanner() {
             onSelectCamera={() => navigateStep('camera')} 
             onSelectText={() => navigateStep('text')} 
             onFileUpload={handleFileUpload} 
+            onPdfUpload={handlePdfUpload}
           />
         )}
 

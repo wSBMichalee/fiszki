@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 import StudyMode from '@/components/StudyMode'
 import DeckGallery from '@/components/DeckGallery'
 
@@ -40,7 +41,9 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
       </div>
       
       {cards.length > 0 ? (
-        <StudyMode key={id} deckId={id} initialCards={cards} />
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center text-sm text-[var(--color-graphite)]">Ładowanie sesji nauki...</div>}>
+          <StudyMode key={id} deckId={id} initialCards={cards} />
+        </Suspense>
       ) : (
         <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300 shadow-sm">
           <p className="text-[--color-graphite]">Ten zestaw nie ma jeszcze żadnych fiszek.</p>
