@@ -173,10 +173,10 @@ export default function HeaderNav({ user, decks = [] }: { user: UserData | null,
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-full sm:w-[380px] bg-white shadow-2xl z-40 flex flex-col pt-24 px-6 pb-6 outline-none border-l border-gray-100"
+              className="fixed top-0 right-0 bottom-0 w-full sm:w-[380px] bg-white shadow-2xl z-40 flex flex-col pt-24 px-6 pb-6 outline-none border-l border-gray-100 overflow-y-auto"
             >
               {user ? (
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col flex-1 min-h-full">
                   <div className="mb-8">
                     <p className="text-xs font-semibold text-[var(--color-graphite)] uppercase tracking-wider mb-1">Zalogowano jako</p>
                     <p className="text-[var(--color-navy)] font-medium text-lg truncate">{user.email}</p>
@@ -275,7 +275,7 @@ export default function HeaderNav({ user, decks = [] }: { user: UserData | null,
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col flex-1 min-h-full">
                   <div className="flex flex-col gap-3 mt-4">
                     <Link 
                       href="/login"
