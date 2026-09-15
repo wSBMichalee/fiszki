@@ -16,6 +16,12 @@ export default function Footer({ className = "bg-[var(--color-surface-alt)]" }: 
           {/* Linki po prawej */}
           <nav className="flex flex-wrap items-center justify-center sm:justify-start gap-x-6 gap-y-2 text-xs sm:text-sm font-medium text-[var(--color-graphite)]">
             <Link 
+              href="/blog" 
+              className="py-2 hover:text-[var(--color-navy)] transition-colors inline-block"
+            >
+              Blog
+            </Link>
+            <Link 
               href="/kontakt" 
               className="py-2 hover:text-[var(--color-navy)] transition-colors inline-block"
             >

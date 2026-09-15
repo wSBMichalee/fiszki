@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Layers, Camera, LogOut, AlertTriangle, Loader2, ChevronDown } from 'lucide-react'
+import { Layers, Camera, LogOut, AlertTriangle, Loader2, ChevronDown, BookOpen } from 'lucide-react'
 import { logout } from '@/app/login/actions'
 import { deleteAccount } from '@/app/actions/deleteAccount'
 import Button from './Button'
@@ -199,6 +199,14 @@ export default function HeaderNav({ user, decks = [] }: { user: UserData | null,
                       <Camera size={22} className="text-[var(--color-gold)]" />
                       Nowy zestaw
                     </Link>
+                    <Link 
+                      href="/blog"
+                      onClick={closeDrawer}
+                      className="flex items-center gap-3 p-4 rounded-2xl hover:bg-gray-50 text-[var(--color-navy)] transition-colors font-medium text-lg"
+                    >
+                      <BookOpen size={22} className="text-[var(--color-gold)]" />
+                      Blog
+                    </Link>
                   </nav>
 
                   {Object.keys(groupedDecks).length > 0 && (
@@ -295,9 +303,10 @@ export default function HeaderNav({ user, decks = [] }: { user: UserData | null,
                   
                   <div className="mt-auto flex flex-col gap-4 text-center">
                     <div className="h-px w-full bg-gray-100 mb-2"></div>
-                    <Link href="#" className="text-sm font-medium text-[var(--color-graphite)] hover:text-[var(--color-navy)] transition-colors">Kontakt</Link>
-                    <Link href="#" className="text-sm font-medium text-[var(--color-graphite)] hover:text-[var(--color-navy)] transition-colors">Regulamin</Link>
-                    <Link href="#" className="text-sm font-medium text-[var(--color-graphite)] hover:text-[var(--color-navy)] transition-colors">Polityka prywatności</Link>
+                    <Link href="/blog" onClick={closeDrawer} className="text-sm font-medium text-[var(--color-graphite)] hover:text-[var(--color-navy)] transition-colors">Blog</Link>
+                    <Link href="/kontakt" onClick={closeDrawer} className="text-sm font-medium text-[var(--color-graphite)] hover:text-[var(--color-navy)] transition-colors">Kontakt</Link>
+                    <Link href="/regulamin" onClick={closeDrawer} className="text-sm font-medium text-[var(--color-graphite)] hover:text-[var(--color-navy)] transition-colors">Regulamin</Link>
+                    <Link href="/polityka-prywatnosci" onClick={closeDrawer} className="text-sm font-medium text-[var(--color-graphite)] hover:text-[var(--color-navy)] transition-colors">Polityka prywatności</Link>
                   </div>
                 </div>
               )}
