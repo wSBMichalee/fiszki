@@ -6,6 +6,11 @@ import { NonRetriableError } from 'inngest'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
 export const processNotesJob = inngest.createFunction(
   { 
     id: 'process-notes-job', 
@@ -17,11 +22,7 @@ export const processNotesJob = inngest.createFunction(
       const deckId = originalEvent.data.deckId
 
       await step.run('set-error-status', async () => {
-        // Musimy stworzyć nową instancję Supabase dla bloku onFailure
-        const supabaseAdmin = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
+        // Używamy globalnego supabaseAdmin dla bloku onFailure
         
         await supabaseAdmin
           .from('decks')
@@ -39,11 +40,7 @@ export const processNotesJob = inngest.createFunction(
     console.log(`Rozpoczynam przetwarzanie talii ${deckId} w tle dla usera ${userId}...`)
     
     await step.run('set-processing-status', async () => {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      )
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('decks')
         .update({ processing_status: 'processing' })
         .eq('id', deckId)
@@ -89,11 +86,6 @@ export const processNotesJob = inngest.createFunction(
     })
 
     await step.run('save-to-supabase', async () => {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      )
-
       if (!parsedCards || !Array.isArray(parsedCards) || parsedCards.length === 0) {
         throw new NonRetriableError('Wygenerowano pustą listę fiszek')
       }
@@ -104,7 +96,7 @@ export const processNotesJob = inngest.createFunction(
         answer: card.answer || card.back || '',
       }))
 
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('cards')
         .insert(cardsToInsert)
 
@@ -115,12 +107,7 @@ export const processNotesJob = inngest.createFunction(
     })
 
     await step.run('update-deck-status', async () => {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      )
-
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('decks')
         .update({ processing_status: 'completed' })
         .eq('id', deckId)
