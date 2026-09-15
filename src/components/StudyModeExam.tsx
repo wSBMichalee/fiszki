@@ -4,6 +4,7 @@ import { Check, X, ArrowRightLeft, Trophy, Sparkles, RotateCcw, ArrowLeft, Chevr
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Card, StudyGoal } from './StudyMode'
 import { getWeightedShuffle } from './StudyMode'
+import FlashCardFace from './FlashCardFace'
 
 import { Box } from 'lucide-react'
 
@@ -299,51 +300,30 @@ export default function StudyModeExam({
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
             style={{ transformStyle: is3D ? "preserve-3d" : "flat" }}
             className="w-full h-[60vh] min-h-[400px] max-h-[600px] grid col-start-1 row-start-1 cursor-pointer"
-            onClick={() => setIsFlipped(!isFlipped)}
           >
             {/* Front */}
-            <div 
-              className="col-start-1 row-start-1 backface-hidden bg-[var(--color-ivory)] rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border border-gray-200/90 flex flex-col items-center p-6 sm:p-8 pt-16 pb-16 text-center select-none overflow-hidden"
+            <FlashCardFace 
+              content={currentCard.question}
+              variant="front"
+              label="Pytanie egzaminacyjne"
+              hint="Kliknij, aby sprawdzić odpowiedź"
+              onClick={() => setIsFlipped(!isFlipped)}
               style={!is3D ? { opacity: isFlipped ? 0 : 1, transition: 'opacity 0.2s', zIndex: isFlipped ? 0 : 1 } : { zIndex: isFlipped ? 0 : 1 }}
-            >
-              <span className="absolute top-6 text-xs font-bold uppercase tracking-widest text-[var(--color-navy)]/35">
-                Pytanie egzaminacyjne
-              </span>
-              
-              <div className="flex-1 flex flex-col justify-center items-center w-full min-h-0 overflow-y-auto custom-scrollbar py-2">
-                <h3 className={`font-serif font-bold text-[var(--color-navy)] leading-snug tracking-tight whitespace-pre-line w-full ${currentCard.question.length > 120 ? 'text-left text-lg sm:text-xl' : 'text-center text-xl sm:text-2xl md:text-3xl'}`}>
-                  {currentCard.question}
-                </h3>
-              </div>
-              
-              <div className="absolute bottom-6 text-[var(--color-graphite)] text-xs sm:text-sm font-semibold opacity-60 flex items-center gap-1.5 bg-white/60 px-3.5 py-1.5 rounded-full border border-gray-200/60 shadow-xs">
-                <span>Kliknij, aby sprawdzić odpowiedź</span>
-              </div>
-            </div>
+            />
             
             {/* Back */}
-            <div 
-              className="col-start-1 row-start-1 backface-hidden bg-white rounded-[32px] shadow-[0_12px_36px_rgba(28,43,69,0.07)] border-2 border-[var(--color-gold)] flex flex-col items-center p-6 sm:p-8 pt-16 pb-16 text-center select-none overflow-hidden"
+            <FlashCardFace 
+              content={currentCard.answer}
+              variant="back"
+              label="Odpowiedź"
+              hint="Oceń swoją znajomość poniżej"
+              onClick={() => setIsFlipped(!isFlipped)}
               style={
                 is3D 
                   ? { transform: "rotateY(180deg)", zIndex: isFlipped ? 1 : 0 } 
                   : { transform: "rotateY(0deg)", opacity: isFlipped ? 1 : 0, transition: 'opacity 0.2s', pointerEvents: isFlipped ? 'auto' : 'none', zIndex: isFlipped ? 1 : 0 }
               }
-            >
-              <span className="absolute top-6 text-xs font-bold uppercase tracking-widest text-[var(--color-gold)]">
-                Odpowiedź
-              </span>
-              
-              <div className="flex-1 flex flex-col justify-center items-center w-full min-h-0 overflow-y-auto custom-scrollbar py-2">
-                <p className={`font-serif font-semibold text-[var(--color-navy)] leading-snug tracking-tight whitespace-pre-line w-full ${currentCard.answer.length > 120 ? 'text-left text-base sm:text-lg' : 'text-center text-lg sm:text-xl md:text-2xl'}`}>
-                  {currentCard.answer}
-                </p>
-              </div>
-
-              <div className="absolute bottom-6 text-[var(--color-graphite)] text-xs sm:text-sm font-semibold opacity-60 flex items-center gap-1.5 bg-gray-50 px-3.5 py-1.5 rounded-full border border-gray-200/60 shadow-xs">
-                <span>Oceń swoją znajomość poniżej</span>
-              </div>
-            </div>
+            />
           </motion.div>
         </AnimatePresence>
 
