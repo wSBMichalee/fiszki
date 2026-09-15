@@ -293,7 +293,7 @@ export default function DashboardGrid({
                 <button 
                   onClick={() => setDeckToDelete(null)}
                   disabled={isDeleting}
-                  className="flex-1 py-3 rounded-xl font-medium text-[var(--color-graphite)] bg-gray-50 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl font-medium text-[var(--color-graphite)] bg-white border-2 border-gray-300 hover:bg-gray-100 hover:border-gray-400 active:bg-gray-200 transition-all disabled:opacity-50"
                 >
                   Anuluj
                 </button>

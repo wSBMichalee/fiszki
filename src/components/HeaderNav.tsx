@@ -350,7 +350,7 @@ export default function HeaderNav({ user, decks = [] }: { user: UserData | null,
               <div className="flex gap-3 mt-6">
                 <button 
                   onClick={() => setIsDeleteModalOpen(false)}
-                  className="flex-1 py-3 rounded-xl border border-gray-200 text-[var(--color-graphite)] font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-3 rounded-xl font-medium text-[var(--color-graphite)] bg-white border-2 border-gray-300 hover:bg-gray-100 hover:border-gray-400 active:bg-gray-200 transition-all disabled:opacity-50"
                   disabled={isDeleting}
                 >
                   Anuluj
